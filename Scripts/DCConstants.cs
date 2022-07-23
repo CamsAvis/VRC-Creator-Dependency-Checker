@@ -60,7 +60,10 @@ namespace Cam.DependencyChecker
             {  SocialLink.LinkType.PayHip, PAYHIP_ICON },
         };
 
-        // OTHER
+        // SHADER STUFF
+        public const string POI_VERSION_REGEX = "\\d{1,3}.\\d{1,3}.\\d{1,3}";
+        public const string POI_SHADER_VERSION_PROPERTY = "shader_master_label";
+        
         public static readonly List<string> SHADER_BLACKLIST_KEYWORDS = new List<string>() {
             "VRChat", "Hidden"
         };

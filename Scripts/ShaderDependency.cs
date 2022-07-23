@@ -12,9 +12,6 @@ namespace Cam.DependencyChecker
             PRESENT, INVALID_VERSION, ABSENT
         }
 
-        const string POI_REGEX = "\\d{1,3}.\\d{1,3}.\\d{1,3}";
-        const string POI_SHADER_VERSION_PROPERTY = "shader_master_label";
-
         public string shaderFriendlyName;
         public string shaderName;
         public string version;
@@ -83,14 +80,14 @@ namespace Cam.DependencyChecker
             string shader_label = string.Empty;
             for (int i = 0; i < shader.GetPropertyCount(); i++)
             {
-                if (shader.GetPropertyName(i).Equals(POI_SHADER_VERSION_PROPERTY))
+                if (shader.GetPropertyName(i).Equals(DCConstants.POI_SHADER_VERSION_PROPERTY))
                 {
                     shader_label = shader.GetPropertyDescription(i);
                     break;
                 }
             }
 
-            MatchCollection mc = Regex.Matches(shader_label, POI_REGEX);
+            MatchCollection mc = Regex.Matches(shader_label, DCConstants.POI_VERSION_REGEX);
             if (mc.Count > 0) { 
                 for (int i = 0; i < mc.Count; i++)
                 {
