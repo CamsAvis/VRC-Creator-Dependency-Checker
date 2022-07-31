@@ -77,12 +77,16 @@ namespace Cam.DependencyChecker
         bool av3ManagerSuccess;
 
         public const string SDK_VERSION = "2022.06.03.00.04";
-        const string R_AVATAR_ICON_PATH = "Cam/Social/Remi";
 
         static GUIStyle discordTagStyle;
+        static GUIStyle helpboxIconStyle;
+        static GUIStyle wordWrapStyle;
         Vector2 scrollPos;
 
         DependencyData data;
+        List<ShaderDependency> absentShaderDependencies;
+        List<ShaderDependency> invalidVersionShaderDependencies;
+        List<ShaderDependency> presentShaderDependencies;
 
         [MenuItem("Cam/Start", false, 1999)]
         public static void Init()
@@ -96,6 +100,7 @@ namespace Cam.DependencyChecker
 
         private void OnEnable()
         {
+            allShadersSuccess = true;
             UpdateWindow();
         }
 
@@ -111,11 +116,27 @@ namespace Cam.DependencyChecker
             }
             else
             {
+                absentShaderDependencies = new List<ShaderDependency>();
+                invalidVersionShaderDependencies = new List<ShaderDependency>();
+                presentShaderDependencies = new List<ShaderDependency>();
+
                 for (int i = 0; i < data.shaderDependencies.Count; i++)
                 {
                     data.shaderDependencies[i].CheckImportStatus();
-                    if (data.shaderDependencies[i].importStatus != ShaderDependency.ImportStatus.PRESENT)
-                        allShadersSuccess = false;
+                    switch (data.shaderDependencies[i].importStatus)
+                    {
+                        case ShaderDependency.ImportStatus.ABSENT:
+                            allShadersSuccess = false;
+                            absentShaderDependencies.Add(data.shaderDependencies[i]);
+                            break;
+                        case ShaderDependency.ImportStatus.INVALID_VERSION:
+                            invalidVersionShaderDependencies.Add(data.shaderDependencies[i]);
+                            allShadersSuccess = false;
+                            break;
+                        case ShaderDependency.ImportStatus.PRESENT:
+                            presentShaderDependencies.Add(data.shaderDependencies[i]);
+                            break;
+                    }
                 }
             }
 
@@ -179,22 +200,16 @@ namespace Cam.DependencyChecker
 
         public void OnGUI()
         {
-            if (data == null)
-            {
+            // load data if not exists
+            if (data == null) {
                 data = AssetDatabase.LoadAssetAtPath<DependencyData>(DCConstants.A_DEPENDENCY_DATA_PATH);
-                if (data != null)
-                {
+                if (data != null) {
                     data.shaderDependencies.ForEach(sd => sd.CheckImportStatus());
                 }
                 return;
             }
 
-            discordTagStyle = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 15,
-                richText = true,
-                font = DCConstants.FUTURA_FONT
-            };
+            InitStyles();
 
             using (new EditorGUILayout.HorizontalScope(GUIStyle.none, GUILayout.ExpandWidth(true)))
             {
@@ -219,17 +234,45 @@ namespace Cam.DependencyChecker
             }
         }
 
+        void InitStyles() {
+            discordTagStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 15,
+                richText = true,
+                font = DCConstants.FUTURA_FONT
+            };
+
+            wordWrapStyle = new GUIStyle(GUI.skin.label)
+            {
+                wordWrap = true,
+                richText = true,
+                fontSize = 10,
+                alignment = TextAnchor.MiddleLeft,
+                imagePosition = ImagePosition.ImageLeft,
+                stretchWidth = true
+            };
+
+            helpboxIconStyle = new GUIStyle(GUI.skin.box)
+            {
+                fixedWidth = 32,
+                fixedHeight = 32,
+                alignment = TextAnchor.MiddleRight,
+            };
+        }
+
         void DrawSocialLinks()
         {
             GUILayout.Label(new GUIContent("Helpful Links"), discordTagStyle);
 
-            if (data.thumbnail != null)
-            {
-                EditorGUILayout.BeginHorizontal();
-                GUILayout.Space(40);
-                GUILayout.Box(data.thumbnail, GUILayout.Height(128), GUILayout.Width(128));
-                EditorGUILayout.EndHorizontal();
+            if (data.thumbnail != null) {
+                Rect curViewRect = EditorGUILayout.GetControlRect();
+                curViewRect = new Rect(
+                  curViewRect.x+40, curViewRect.y, 128, 128
+                );
+                GUI.DrawTexture(curViewRect, data.thumbnail);
             }
+
+            GUILayout.Space(115);
 
             // Draw Social Links
             for (int i = 0; i < data.socialLinks.Count; i++)
@@ -353,175 +396,162 @@ namespace Cam.DependencyChecker
 
         void ShowDependencies()
         {
-            //GUILayout.Label("Project Dependency Verification", EditorStyles.whiteLargeLabel);
-            GUILayout.Label(new GUIContent("Dependencies"), UIUtility.discordTagStyle);
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Height(
-                DCConstants.WINDOW_HEIGHT * 2.0f / 3.0f + 10)))
+            float boxHeight = DCConstants.WINDOW_HEIGHT * 2.0f / 3.0f + 10;
+            bool allDependenciesSatisfied = unityVersionSuccess && allShadersSuccess && sdkVersionSuccess;
+
+            //Rect currentViewRect = EditorGUILayout.GetControlRect(false);
+            GUILayout.Label("Dependencies", UIUtility.discordTagStyle);
+            using (new EditorGUI.DisabledGroupScope(allDependenciesSatisfied))
             {
-                EditorGUILayout.BeginVertical("box");
-                scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
+                using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Height(boxHeight)))
+                {
+                    EditorGUILayout.BeginVertical("box");
+                    scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
 
-                // UNITY VERSION
-                #region Unity Version
-                if (Application.unityVersion.Equals(data.unityVersion))
-                {
-                    EditorGUILayout.HelpBox(
-                        $"The correct Unity Version '{data.unityVersion}' has been detected!",
-                        MessageType.Info,
-                        true
-                    );
-                }
-                else
-                {
-                    EditorGUILayout.HelpBox(
-                        $"The creator built this package on Unity Version '{data.unityVersion}'\n" +
-                        $"Your project is running on Unity Version '{Application.unityVersion}'.\n" +
-                        $"Some things my not function as intended",
-                        MessageType.Error,
-                        true
-                    );
-                }
-                #endregion Unity Version
 
-                // SDK VERSION
-                #region VRCSDK Version
-                if (vrcsdkVersion == null || vrcsdkVersion.Length < 1)
-                {
-                    EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.HelpBox(
-                        $"The VRChat SDK 'VRCSDK3-AVATAR-{data.vrcsdkVersion}' was not detected in this project.\n\n" +
-                        $"This package will be unable to be uploaded to VRChat until the VRChat SDK has been imported.\n\n" +
-                        "Additionally, importing the VRChat SDK AFTER this package may cause issues with VRChat-associated scripts; " +
-                        "if anything in this package is broken in game, this issue may be the cause.",
-                        MessageType.Error,
-                        true
-                    );
-                    if (GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(138)))
-                        Application.OpenURL(DCConstants.SDK_DOWNLOAD_URL);
-                    EditorGUILayout.EndHorizontal();
-                }
-                else if (sdkVersionSuccess)
-                {
-                    EditorGUILayout.HelpBox(
-                        $"The correct VRCSDK Version '{data.vrcsdkVersion}' has been detected!",
-                        MessageType.Info,
-                        true
-                    );
-                }
-                else
-                {
-                    EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.HelpBox(
-                        $"The creator built this package using VRCSDK Version '{data.vrcsdkVersion}'\n" +
-                        $"Your project is running on Unity Version '{vrcsdkVersion}'.\n" +
-                        $"Some things my not function as intended",
-                        MessageType.Error,
-                        true
-                    );
-                    if (GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(38)))
-                        Application.OpenURL(DCConstants.SDK_DOWNLOAD_URL);
-                    EditorGUILayout.EndHorizontal();
-                }
-                #endregion VRCSDK Version
-
-                // SHADERS
-                #region Shaders
-                bool allShadersSuccess = true;
-                foreach (ShaderDependency sd in data.shaderDependencies)
-                {
-                    EditorGUILayout.BeginHorizontal();
-                    switch (sd.importStatus)
+                    if (allDependenciesSatisfied)
                     {
-                        case ShaderDependency.ImportStatus.PRESENT:
-                            break;
-                        case ShaderDependency.ImportStatus.INVALID_VERSION:
-                            allShadersSuccess = false;
-                            EditorGUILayout.HelpBox(
-                                $"You have an invalid version of '{sd.shaderFriendlyName}' installed.\n" +
-                                $"This project requires '{sd.shaderFriendlyName}' version '{sd.version}'",
-                                MessageType.Error,
-                                true
-                            );
-                            if (sd.link.Length > 0 && GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(38)))
-                                Application.OpenURL(sd.link);
-                            break;
-                        case ShaderDependency.ImportStatus.ABSENT:
-                            allShadersSuccess = false;
-                            string version = sd.version.Length > 0 
-                                ? $"This project requires '{sd.shaderFriendlyName}' version '{sd.version}'"
-                                : $"This project requires '{sd.shaderFriendlyName}'";
-                            EditorGUILayout.HelpBox(
-                                $"You do not have '{sd.shaderFriendlyName}' installed.\n{version}",
-                                MessageType.Error,
-                                true
-                            );
-                            if (sd.link.Length > 0 && GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(38)))
-                                Application.OpenURL(sd.link);
-                            break;
+                        string message = $"Everything looks good!!";
+                        EditorGUILayout.HelpBox(new GUIContent(message, DCConstants.CHECK_ICON, ""), true);
                     }
-                    EditorGUILayout.EndHorizontal();
-                }
-                if (allShadersSuccess)
-                {
-                    EditorGUILayout.HelpBox(
-                        $"All shaders have been detected successfully :)",
-                        MessageType.Info,
-                        true
-                    );
-                }
-                #endregion
+                    else
+                    {
+                        string message = $"Some dependencies have not been satisfied.";
+                        EditorGUILayout.HelpBox(message, MessageType.Warning, true);
+                    }
 
-                EditorGUILayout.EndScrollView();
-                EditorGUILayout.EndVertical();
+                    GUILine(!allDependenciesSatisfied);
+
+                    // UNITY VERSION
+                    #region Unity Version
+                    if (Application.unityVersion.Equals(data.unityVersion))
+                    {
+                        string message = $"The correct Unity Version '{data.unityVersion}' has been detected!";
+                        EditorGUILayout.HelpBox(new GUIContent(message, DCConstants.CHECK_ICON, ""), true);
+                    }
+                    else
+                    {
+                        EditorGUILayout.HelpBox(
+                            $"The creator built this package on Unity Version '{data.unityVersion}'\n" +
+                            $"Your project is running on Unity Version '{Application.unityVersion}'.\n" +
+                            $"Some things my not function as intended",
+                            MessageType.Error,
+                            true
+                        );
+                    }
+                    #endregion Unity Version
+
+                    // SDK VERSION
+                    #region VRCSDK Version
+                    if (vrcsdkVersion == null || vrcsdkVersion.Length < 1)
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        EditorGUILayout.HelpBox(
+                            $"The VRChat SDK 'VRCSDK3-AVATAR-{data.vrcsdkVersion}' was not detected in this project.\n\n" +
+                            $"This package will be unable to be uploaded to VRChat until the VRChat SDK has been imported.\n\n" +
+                            "Additionally, importing the VRChat SDK AFTER this package may cause issues with VRChat-associated scripts; " +
+                            "if anything in this package is broken in game, this issue may be the cause.",
+                            MessageType.Error,
+                            true
+                        );
+                        if (GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(138)))
+                            Application.OpenURL(DCConstants.SDK_DOWNLOAD_URL);
+                        EditorGUILayout.EndHorizontal();
+                    }
+                    else if (sdkVersionSuccess)
+                    {
+                        string message = $"The correct VRCSDK Version '{data.vrcsdkVersion}' has been detected!";
+                        EditorGUILayout.HelpBox(new GUIContent(message, DCConstants.CHECK_ICON, ""), true);
+                    }
+                    else
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        EditorGUILayout.HelpBox(
+                            $"The creator built this package using VRCSDK Version '{data.vrcsdkVersion}'\n" +
+                            $"Your project is running on Unity Version '{vrcsdkVersion}'.\n" +
+                            $"Some things my not function as intended",
+                            MessageType.Error,
+                            true
+                        );
+                        if (GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(66)))
+                            Application.OpenURL(DCConstants.SDK_DOWNLOAD_URL);
+                        EditorGUILayout.EndHorizontal();
+                    }
+                    #endregion VRCSDK Version
+
+                    // SHADERS
+                    #region Shaders
+                    absentShaderDependencies.ForEach(sd => DrawShaderDependency(sd));
+                    invalidVersionShaderDependencies.ForEach(sd => DrawShaderDependency(sd));
+                    presentShaderDependencies.ForEach(sd => DrawShaderDependency(sd));
+                    #endregion
+
+                    EditorGUILayout.EndScrollView();
+                    EditorGUILayout.EndVertical();
+                }
+            }
+
+            if (allDependenciesSatisfied) {
+                GUI.DrawTexture(new Rect(265, 200, 256, 256), DCConstants.CHECK_ICON_HP);
+                GUI.DrawTexture(new Rect(500, 430, 64, 64), DCConstants.PEEPO_HYPERS_ICON);
             }
         }
 
-        void DisplayShaderStatus(ShaderDependency sc)
+        void DrawShaderDependency(ShaderDependency sd)
         {
-            /*
-            MessageType mt = sc.importErrorSeverity == ShaderDependency.ImportErrorSeverity.REQUIRED
-                ? MessageType.Error
-                : MessageType.Warning;
-
             EditorGUILayout.BeginHorizontal();
-            switch (sc.importStatus)
+            switch (sd.importStatus)
             {
-                case ShaderDependency.ImportStatus.NO_SHADER:
-                    string errorMsg = sc.importErrorMessage ?? "Some of your avatar's materials will not display properly";
-                    EditorGUILayout.HelpBox($"You have not imported {sc.friendlyShaderName} shader\n{errorMsg}", mt);
-                    break;
-                case ShaderDependency.ImportStatus.UNCHECKED:
-                    break;
-                case ShaderDependency.ImportStatus.SUCCESS:
-                    break;
-                case ShaderDependency.ImportStatus.WRONG_SHADER:
-                    if (sc.shaderVersions != null)
-                    {
-                        string shaderVersions = string.Join(" or ", sc.shaderVersions);
-                        EditorGUILayout.HelpBox(
-                            $"This avatar requires {sc.friendlyShaderName} shader version {shaderVersions}.  " +
-                            $"This avatar will undoubtedly look like cheeks if you do not import {shaderVersions}",
-                            MessageType.Error
-                        );
-
-                        /*
-                        EditorGUILayout.HelpBox(
-                            $"This avatar requires {sc.friendlyShaderName} shader version {shaderVersions}.\n" +
-                            $"You have imported an unsupported version of {sc.friendlyShaderName} shader " +
-                            $"for this avatar. Your avatar might not look as the creator intended and " +
-                            $"some material animations may be non-functional.",
-                            mt
-                        );
+                case ShaderDependency.ImportStatus.PRESENT:
+                    string message = string.Empty;
+                    if (sd.version != null && sd.version.Length > 0) {
+                        message = $"'{sd.shaderFriendlyName}' v{sd.version} has been detected!";
+                    } else if(sd.version != null) {
+                        message = $"'{sd.shaderFriendlyName}' has been detected!";
                     }
+                    EditorGUILayout.HelpBox(new GUIContent(message, DCConstants.CHECK_ICON, ""), true);
                     break;
-            }
-            if (sc.importStatus != ShaderDependency.ImportStatus.SUCCESS)
-            {
-                if (GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(38)))
-                    Application.OpenURL(sc.downloadLink);
+                case ShaderDependency.ImportStatus.INVALID_VERSION:
+                    allShadersSuccess = false;
+                    EditorGUILayout.HelpBox(
+                        $"You have an invalid version of '{sd.shaderFriendlyName}' installed.\n" +
+                        $"This project requires '{sd.shaderFriendlyName}' version '{sd.version}'",
+                        MessageType.Error,
+                        true
+                    );
+                    if (sd.link.Length > 0 && GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(38)))
+                        Application.OpenURL(sd.link);
+
+                    allShadersSuccess = false;
+                    break;
+                case ShaderDependency.ImportStatus.ABSENT:
+                    allShadersSuccess = false;
+                    string version = sd.version.Length > 0
+                        ? $"This project requires '{sd.shaderFriendlyName}' version '{sd.version}'"
+                        : $"This project requires '{sd.shaderFriendlyName}'";
+                    EditorGUILayout.HelpBox(
+                        $"You do not have '{sd.shaderFriendlyName}' installed.\n{version}",
+                        MessageType.Error,
+                        true
+                    );
+                    if (sd.link.Length > 0 && GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(38)))
+                        Application.OpenURL(sd.link);
+
+                    allShadersSuccess = false;
+                    break;
             }
             EditorGUILayout.EndHorizontal();
-            */
+        }
+
+        static void GUILine(bool enabled, int i_height = 1)
+        {
+            Rect rect = EditorGUILayout.GetControlRect(false, i_height);
+            if (rect != null)
+            {
+                rect.width = EditorGUIUtility.currentViewWidth;
+                GUI.DrawTexture(rect, EditorGUIUtility.whiteTexture);
+            }
+            GUILayout.Space(10);
         }
     }
 }

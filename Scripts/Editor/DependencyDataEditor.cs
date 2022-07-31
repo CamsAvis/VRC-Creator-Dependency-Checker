@@ -44,8 +44,7 @@ namespace Cam.DependencyChecker
             if (thumbnail.objectReferenceValue != null)
             {
                 Texture2D thumbnailTex = (Texture2D)thumbnail.objectReferenceValue;
-                ValidThumbnail = thumbnailTex.width == thumbnailTex.height &&
-                    thumbnailTex.width == THUMBNAIL_SIZE;
+                ValidThumbnail = thumbnailTex.width == thumbnailTex.height;
             }
         }
 
@@ -283,7 +282,6 @@ namespace Cam.DependencyChecker
             EditorGUILayout.EndVertical();
         }
 
-
         void DrawGetVersions()
         {
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
@@ -334,7 +332,6 @@ namespace Cam.DependencyChecker
             }
         }
 
-
         void DrawThumbnail()
         {
             using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
@@ -351,23 +348,22 @@ namespace Cam.DependencyChecker
                         MessageType.Warning
                     );
                 }
-                else if (!ValidThumbnail)
-                {
-                    Texture2D thumbnailTex = (Texture2D)thumbnail.objectReferenceValue;
-                    EditorGUILayout.HelpBox(
-                        $"Your image is {thumbnailTex.width}px x {thumbnailTex.height}px.\n\n" +
-                        $"Thumbnails are recommended to be \n{THUMBNAIL_SIZE}px x {THUMBNAIL_SIZE}px square.\n\n" +
-                        $"If they are not, they will be cropped to fit.",
-                        MessageType.Error,
-                        true
-                    );
-                }
                 else
                 {
-                    EditorGUILayout.HelpBox(
-                        "Yay! Nice Thumbnail <3",
-                        MessageType.Info
-                    );
+                    Texture2D thumbnailImg = thumbnail.objectReferenceValue as Texture2D;
+
+                    if(thumbnailImg.width == thumbnailImg.height) {
+                        EditorGUILayout.HelpBox(
+                            "Yay! Nice Thumbnail <3",
+                            MessageType.Info
+                        );
+                    } else {
+                        EditorGUILayout.HelpBox(
+                            "Your image is not square - It may not display how you intend it to",
+                            MessageType.Error,
+                            true
+                        );
+                    }
                 }
                 EditorGUILayout.EndVertical();
 
@@ -381,15 +377,11 @@ namespace Cam.DependencyChecker
                     GUILayout.Width(128),
                     GUILayout.Height(128)
                 );
-                thumbnail.objectReferenceValue = iconImage;
-            }
 
-            // check for valid thumbnail
-            if (EditorGUI.EndChangeCheck() && thumbnail.objectReferenceValue != null)
-            {
-                Texture2D thumbnailTex = (Texture2D)thumbnail.objectReferenceValue;
-                ValidThumbnail = thumbnailTex.width == thumbnailTex.height &&
-                    thumbnailTex.width == THUMBNAIL_SIZE;
+                if(EditorGUI.EndChangeCheck()) {
+                    Undo.RecordObject(thumbnail.objectReferenceValue, "Change Thumbnail Image");
+                    thumbnail.objectReferenceValue = iconImage;
+                }
             }
         }
 

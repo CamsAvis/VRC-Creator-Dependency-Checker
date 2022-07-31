@@ -6,28 +6,50 @@ namespace Cam.DependencyChecker
 {
     public static class DCConstants
     {
-        // MISC // 
+        //////////
+        // MISC //
+        //////////
         public const int THUMBNAIL_SIZE = 128;
         public const float WINDOW_WIDTH = 600;
         public const float WINDOW_HEIGHT = 500;
         public const float COLUMN_SPACER = 5;
         public static readonly string WINDOW_NAME = "Avatars Start Screen";
 
+        //////////////////
         // EDITOR PREFS //
+        //////////////////
         private static string[] paths = Application.dataPath.Split('/');
         private static string projectName = paths[paths.Length - 2].Replace(" ", "_").ToLower();
         public static readonly string HIDE_ON_LOAD_STRING = $"cam_dc_hide_on_load_{projectName}";
 
+        ///////////
         // LINKS //
+        ///////////
         public const string SDK_DOWNLOAD_URL = "https://vrchat.com/home/download";
 
+        ///////////
         // PATHS //
+        ///////////
         public const string A_DEPENDENCY_DATA_PATH = "Assets/!Cam/Scripts/Dependency Checker/Dependency Data.asset";
 
+        ///////////////
         // RESOURCES //
+        ///////////////
         #region Resources
 
+        ///////////
         // ICONS //
+        ///////////
+
+        // UI
+        public const string R_CHECK_ICON_PATH = "Cam/DC/Icons/Check";
+        public const string R_CHECK_ICON_HP_PATH = "Cam/DC/Icons/CheckHP";
+        public const string R_PEEPO_HYPERS_PATH = "Cam/DC/Icons/Hypers";
+        public static readonly Texture2D CHECK_ICON = Resources.Load<Texture2D>(R_CHECK_ICON_PATH);
+        public static readonly Texture2D CHECK_ICON_HP = Resources.Load<Texture2D>(R_CHECK_ICON_HP_PATH);
+        public static readonly Texture2D PEEPO_HYPERS_ICON = Resources.Load<Texture2D>(R_PEEPO_HYPERS_PATH);
+
+        // SOCIALS
         public const string R_DISCORD_ICON_PATH = "Cam/DC/Icons/DiscordIcon";
         public const string R_TWITTER_ICON_PATH = "Cam/DC/Icons/TwitterIcon";
         public const string R_YOUTUBE_ICON_PATH = "Cam/DC/Icons/YoutubeIcon";
@@ -67,7 +89,9 @@ namespace Cam.DependencyChecker
         };
         # endregion Resources
 
+        //////////////////////
         // SHADER CONSTANTS //
+        //////////////////////
         #region Shader Constants
         public const string POI_VERSION_REGEX = "\\d{1,3}.\\d{1,3}.\\d{1,3}";
         public const string POI_SHADER_VERSION_PROPERTY = "shader_master_label";
