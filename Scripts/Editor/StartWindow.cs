@@ -469,7 +469,7 @@ namespace Cam.DependencyChecker
                         EditorGUILayout.BeginHorizontal();
                         EditorGUILayout.HelpBox(
                             $"The creator built this package using VRCSDK Version '{data.vrcsdkVersion}'\n" +
-                            $"Your project is running on Unity Version '{vrcsdkVersion}'.\n" +
+                            $"Your project is running on VRCSDK Version '{vrcsdkVersion}'.\n" +
                             $"Some things my not function as intended",
                             MessageType.Error,
                             true
