@@ -6,7 +6,12 @@ namespace Cam.DependencyChecker
 {
     public static class DCConstants
     {
+        // MISC // 
         public const int THUMBNAIL_SIZE = 128;
+        public const float WINDOW_WIDTH = 600;
+        public const float WINDOW_HEIGHT = 500;
+        public const float COLUMN_SPACER = 5;
+        public static readonly string WINDOW_NAME = "Avatars Start Screen";
 
         // EDITOR PREFS //
         private static string[] paths = Application.dataPath.Split('/');
@@ -18,6 +23,9 @@ namespace Cam.DependencyChecker
 
         // PATHS //
         public const string A_DEPENDENCY_DATA_PATH = "Assets/!Cam/Scripts/Dependency Checker/Dependency Data.asset";
+
+        // RESOURCES //
+        #region Resources
 
         // ICONS //
         public const string R_DISCORD_ICON_PATH = "Cam/DC/Icons/DiscordIcon";
@@ -31,8 +39,6 @@ namespace Cam.DependencyChecker
         public const string R_TIKTOK_ICON_PATH = "Cam/DC/Icons/TikTokIcon";
         public const string R_LINKTREE_ICON_PATH = "Cam/DC/Icons/LinkTreeIcon";
         public const string R_PAYHIP_ICON_PATH = "Cam/DC/Icons/PayHipIcon";
-
-        // RESOURCES //
         public static readonly Font FUTURA_FONT = Resources.Load<Font>("Cam/DC/Fonts/Futura Heavy font");
         public static readonly Texture2D DISCORD_ICON = Resources.Load<Texture2D>(R_DISCORD_ICON_PATH);
         public static readonly Texture2D TWITTER_ICON = Resources.Load<Texture2D>(R_TWITTER_ICON_PATH);
@@ -59,15 +65,15 @@ namespace Cam.DependencyChecker
             {  SocialLink.LinkType.LinkTree, LINKTREE_ICON },
             {  SocialLink.LinkType.PayHip, PAYHIP_ICON },
         };
+        # endregion Resources
 
-        // SHADER STUFF
+        // SHADER CONSTANTS //
+        #region Shader Constants
         public const string POI_VERSION_REGEX = "\\d{1,3}.\\d{1,3}.\\d{1,3}";
         public const string POI_SHADER_VERSION_PROPERTY = "shader_master_label";
-        
         public static readonly List<string> SHADER_BLACKLIST_KEYWORDS = new List<string>() {
-            "VRChat", "Hidden"
+            "Locked"
         };
-
         public static readonly List<string> DEFAULT_SHADER_NAMES = new List<string>() {
             "Hidden/TerrainEngine/Splatmap/Diffuse-AddPass",
             "Hidden/TerrainEngine/BillboardTree",
@@ -173,16 +179,6 @@ namespace Cam.DependencyChecker
             "Hidden/TerrainEngine/Details/WavingDoublePass",
             "Hidden/TerrainEngine/Details/BillboardWavingDoublePass"
         };
-
-        // METHODS
-        public static bool ShaderInBlacklist(string shaderName)
-        {
-            foreach (string blacklistedShaderKeyword in SHADER_BLACKLIST_KEYWORDS)
-            {
-                if (shaderName.Contains(blacklistedShaderKeyword))
-                    return true;
-            }
-            return false;
-        }
+        #endregion Shader Constants
     }
 }

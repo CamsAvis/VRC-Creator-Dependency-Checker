@@ -11,8 +11,9 @@ namespace Cam.DependencyChecker
     [CustomEditor(typeof(DependencyData))]
     public class DependencyDataEditor : Editor
     {
-        public bool ValidThumbnail;
+        bool ValidThumbnail;
         Texture2D prefabTexture;
+        GameObject grabShaderFromPrefab;
 
         SerializedProperty thumbnail;
         SerializedProperty socialLinks;
@@ -20,6 +21,7 @@ namespace Cam.DependencyChecker
         SerializedProperty vrcsdkVersion;
         SerializedProperty scene;
         SerializedProperty prefab;
+        SerializedProperty lockUI;
 
         bool socialLinksDropdown;
         bool shadersDropdown;
@@ -32,12 +34,12 @@ namespace Cam.DependencyChecker
             vrcsdkVersion = serializedObject.FindProperty("vrcsdkVersion");
             scene = serializedObject.FindProperty("scene");
             prefab = serializedObject.FindProperty("prefab");
+            lockUI = serializedObject.FindProperty("lockUI");
 
             socialLinksDropdown = true;
             shadersDropdown = true;
 
             GetPrefabTexture();
-            GetVersions();
 
             if (thumbnail.objectReferenceValue != null)
             {
@@ -71,15 +73,36 @@ namespace Cam.DependencyChecker
         {
             serializedObject.Update();
 
-            DrawThumbnail();
-            GUILayout.Space(10);
-            DrawPrefabAndSceneSelect();
-            GUILayout.Space(10);
-            DrawGetVersions();
-            GUILayout.Space(10);
-            DrawSocialLinks();
-            GUILayout.Space(10);
-            DrawShaders();
+            //EditorGUI.BeginChangeCheck();
+
+            string lockText = lockUI.boolValue ? "Unlock" : "Lock";
+            if (GUILayout.Button(lockText, GUILayout.Height(30)))
+                lockUI.boolValue = !lockUI.boolValue;
+
+            if (!lockUI.boolValue)
+            {
+                EditorGUI.BeginChangeCheck();
+
+                DrawThumbnail();
+                GUILayout.Space(10);
+                DrawPrefabAndSceneSelect();
+                GUILayout.Space(10);
+                DrawGetVersions();
+                GUILayout.Space(10);
+                DrawSocialLinks();
+                GUILayout.Space(10);
+                DrawShaders();
+
+                if(EditorGUI.EndChangeCheck()) {
+                    serializedObject.ApplyModifiedProperties();
+                    StartWindow[] windows = Resources.FindObjectsOfTypeAll<StartWindow>();
+                    for (int i = 0; i < windows.Length; i++) {
+                        windows[i].UpdateWindow();
+                        windows[i].Repaint();
+                    }
+                    return;
+                }
+            }
 
             serializedObject.ApplyModifiedProperties();
         }
@@ -90,82 +113,121 @@ namespace Cam.DependencyChecker
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             using (new EditorGUILayout.HorizontalScope()) {
                 GUILayout.Label("Shaders", EditorStyles.whiteLargeLabel);
-                if(GUILayout.Button(shadersDropdown ? "v" : "<", GUILayout.Width(25))) {
+                if (GUILayout.Button(shadersDropdown ? "v" : "<", GUILayout.Width(25))) {
                     shadersDropdown = !shadersDropdown;
                 }
             }
 
             GUILayout.Space(5);
 
-            if (shadersDropdown)
+            if(shadersDropdown)
+                DrawShaderList();
+
+            EditorGUILayout.EndVertical();
+        }
+
+        void DrawShaderList() { 
+            using (new EditorGUILayout.HorizontalScope())
             {
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    if (GUILayout.Button("Retrieve Shaders From Project"))
-                        RefreshShaderDependenciesFromProject();
-                    if (GUILayout.Button("Retrieve Shaders From Prefab"))
-                        RefreshShaderDependenciesFromPrefab();
+                grabShaderFromPrefab = (GameObject)EditorGUILayout.ObjectField(
+                    grabShaderFromPrefab, typeof(GameObject), true
+                );
+                if (GUILayout.Button("Retrieve Shaders from Prefab")) {
+                    RefreshShaderDependenciesFromPrefab();
                 }
-                GUI.color = Color.red;
-                if (GUILayout.Button("Reset Shaders"))
-                    ResetShaders();
-                GUI.color = Color.white;
+            }
+            GUILayout.Space(10);
 
-                GUILayout.Space(10);
+            GUI.color = Color.white;
+            if (GUILayout.Button("(+) Add Shader", GUILayout.Height(25)))
+                AddShader();
+            GUI.color = Color.white;
 
-                SerializedProperty shaderDependices = serializedObject.FindProperty("shaderDependencies");
-                if (shaderDependices == null)
+            GUILayout.Space(10);
+
+            SerializedProperty shaderDependices = serializedObject.FindProperty("shaderDependencies");
+            if (shaderDependices != null)
+            {
+                for (int i = 0; i < shaderDependices.arraySize; i++)
                 {
-                    Debug.LogError("Dependencies are null");
-                }
-                else
-                {
-                    for (int i = 0; i < shaderDependices.arraySize; i++)
+                    SerializedProperty sd = shaderDependices.GetArrayElementAtIndex(i);
+                    SerializedProperty shaderFriendlyName = sd.FindPropertyRelative("shaderFriendlyName");
+                    SerializedProperty link = sd.FindPropertyRelative("link");
+                    SerializedProperty version = sd.FindPropertyRelative("version");
+                    SerializedProperty shader = sd.FindPropertyRelative("shader");
+                    Shader shaderObject = null;
+
+                    using (new EditorGUILayout.VerticalScope("box"))
                     {
-                        using (new EditorGUILayout.HorizontalScope("box"))
+                        using (new EditorGUILayout.HorizontalScope())
                         {
-                            EditorGUILayout.BeginVertical();
+                            using (new EditorGUILayout.VerticalScope())
                             {
-                                //EditorGUI.BeginChangeCheck();
-                                EditorGUILayout.PropertyField(shaderDependices
-                                    .GetArrayElementAtIndex(i)
-                                    .FindPropertyRelative("shader")
+                                EditorGUI.BeginChangeCheck();
+                                shaderObject = (Shader)EditorGUILayout.ObjectField(
+                                    shader.objectReferenceValue,
+                                    typeof(Shader),
+                                    false
                                 );
-                                /*
-                                if(EditorGUI.EndChangeCheck()) {
-                                    typeof(ShaderDependency).GetMethod("Generate").Invoke(
-                                        shaderDependices.GetArrayElementAtIndex(i).objectReferenceValue,
-                                        new object[] { 
-                                            shaderDependices.GetArrayElementAtIndex(i).FindPropertyRelative("shader"),
-                                        }
-                                    );
+
+                                if (EditorGUI.EndChangeCheck())
+                                {
+                                    // apply shader
+                                    shader.objectReferenceValue = shaderObject;
+
+                                    // reset others
+                                    link.stringValue = string.Empty;
+                                    shaderFriendlyName.stringValue = string.Empty;
+                                    version.stringValue = string.Empty;
+
+                                    serializedObject.ApplyModifiedProperties();
+                                    if (shaderObject != null)
+                                    {
+                                        DependencyData targetObject = this.target as DependencyData;
+                                        targetObject.shaderDependencies[i].Generate(shaderObject);
+                                        serializedObject.Update();
+                                    }
                                 }
-                                */
 
-                                EditorGUILayout.PropertyField(shaderDependices
-                                    .GetArrayElementAtIndex(i)
-                                    .FindPropertyRelative("shaderFriendlyName")
-                                );
+                                shaderFriendlyName.stringValue = EditorGUILayout.DelayedTextField(
+                                    "Shader Friendly Name", shaderFriendlyName.stringValue);
 
-                                EditorGUILayout.PropertyField(shaderDependices
-                                    .GetArrayElementAtIndex(i)
-                                    .FindPropertyRelative("link")
-                                );
+                                EditorGUILayout.BeginHorizontal(); 
+                                link.stringValue = EditorGUILayout.DelayedTextField(
+                                    "link", link.stringValue);
+                                if (GUILayout.Button("Test", GUILayout.Width(50)))
+                                    Application.OpenURL(link.stringValue);
+                                EditorGUILayout.EndHorizontal();
+
+                                version.stringValue = EditorGUILayout.DelayedTextField(
+                                    "version", version.stringValue);
+
                             }
-                            EditorGUILayout.EndVertical();
+
                             GUI.color = Color.red;
-                            if (GUILayout.Button("Remove", GUILayout.Width(75), GUILayout.Height(EditorGUIUtility.singleLineHeight * 2)))
+                            if (GUILayout.Button("X", GUILayout.Width(30), GUILayout.Height(EditorGUIUtility.singleLineHeight * 4 + 10)))
                             {
                                 shaderDependices.DeleteArrayElementAtIndex(i);
                                 i = Mathf.Max(0, shaderDependices.arraySize - 1);
+                                return;
                             }
                             GUI.color = Color.white;
+                        }
+
+                        if (!DCFunctions.ValidateLink(link.stringValue))
+                        {
+                            EditorGUILayout.HelpBox("This link is invalid.", MessageType.Error);
                         }
                     }
                 }
             }
 
-            EditorGUILayout.EndVertical();
+            /*
+            GUI.color = Color.red;
+            if (GUILayout.Button("Remove All Shaders"))
+                ResetShaders();
+            GUI.color = Color.white;
+            */
         }
 
         void DrawPrefabAndSceneSelect()
@@ -207,11 +269,6 @@ namespace Cam.DependencyChecker
                         );
                     }
                 }
-                /*
-                if (prefab.objectReferenceValue != null)
-                {
-                    GUILayout.Box(prefabTexture, GUILayout.Width(80), GUILayout.Height(80));
-                }*/
             }
 
 
@@ -226,11 +283,17 @@ namespace Cam.DependencyChecker
             EditorGUILayout.EndVertical();
         }
 
+
         void DrawGetVersions()
         {
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
             {
+                EditorGUILayout.BeginHorizontal();
                 GUILayout.Label("Software Versions", EditorStyles.whiteLargeLabel);
+                if(GUILayout.Button("Retrieve"))
+                    GetVersions();
+
+                EditorGUILayout.EndHorizontal();
                 GUILayout.Space(5);
                 using (new EditorGUILayout.HorizontalScope())
                 {
@@ -270,6 +333,7 @@ namespace Cam.DependencyChecker
                 }
             }
         }
+
 
         void DrawThumbnail()
         {
@@ -329,6 +393,7 @@ namespace Cam.DependencyChecker
             }
         }
 
+
         void DrawSocialLinks()
         {
             if (socialLinks == null)
@@ -349,9 +414,9 @@ namespace Cam.DependencyChecker
                 if (!socialLinksDropdown)
                     return;
 
-                using (new EditorGUI.DisabledGroupScope(socialLinks != null && socialLinks.arraySize >= 11))
+                using (new EditorGUI.DisabledGroupScope(socialLinks != null && socialLinks.arraySize > 10))
                 {
-                    if (GUILayout.Button("Add Social Link", GUILayout.Height(25)))
+                    if (GUILayout.Button("(+) Add Social Link", GUILayout.Height(25)))
                     {
                         int idx = Mathf.Max(socialLinks.arraySize - 1, 0);
                         socialLinks.InsertArrayElementAtIndex(idx);
@@ -366,41 +431,49 @@ namespace Cam.DependencyChecker
                     SerializedProperty url = link.FindPropertyRelative("url");
                     SerializedProperty linkType = link.FindPropertyRelative("linkType");
 
-                    using (new EditorGUILayout.HorizontalScope("box"))
+                    using (new EditorGUILayout.VerticalScope("box"))
                     {
-                        GUILayout.Box(
-                            DCConstants.ICONS[(SocialLink.LinkType)linkType.enumValueIndex],
-                            GUILayout.Height(35),
-                            GUILayout.Width(35)
-                        );
-
-                        EditorGUIUtility.labelWidth = 100;
-                        using (new EditorGUILayout.VerticalScope(GUILayout.Height(35)))
+                        using (new EditorGUILayout.HorizontalScope())
                         {
-                            linkType.enumValueIndex = (int)(SocialLink.LinkType)EditorGUILayout.EnumPopup(
-                                "Link Type",
-                                (SocialLink.LinkType)linkType.enumValueIndex
+                            GUILayout.Box(
+                                DCConstants.ICONS[(SocialLink.LinkType)linkType.enumValueIndex],
+                                GUILayout.Height(35),
+                                GUILayout.Width(35)
                             );
-                            url.stringValue = EditorGUILayout.TextField(
-                                "URL",
-                                url.stringValue
-                            );
-                        }
 
-                        GUI.color = Color.red;
-                        if (GUILayout.Button("Remove", GUILayout.Height(35), GUILayout.Width(75)))
-                        {
-                            socialLinks.DeleteArrayElementAtIndex(i);
-                            serializedObject.ApplyModifiedProperties();
+                            EditorGUIUtility.labelWidth = 100;
+                            using (new EditorGUILayout.VerticalScope(GUILayout.Height(35)))
+                            {
+                                linkType.enumValueIndex = (int)(SocialLink.LinkType)EditorGUILayout.EnumPopup(
+                                    "Link Type",
+                                    (SocialLink.LinkType)linkType.enumValueIndex
+                                );
+                                url.stringValue = EditorGUILayout.DelayedTextField("URL", url.stringValue);
+                            }
+
+                            GUI.color = Color.red;
+                            if (GUILayout.Button("Remove", GUILayout.Height(35), GUILayout.Width(75)))
+                            {
+                                socialLinks.DeleteArrayElementAtIndex(i);
+                                serializedObject.ApplyModifiedProperties();
+                                GUI.color = Color.white;
+                                return;
+                            }
                             GUI.color = Color.white;
-                            return;
                         }
-                        GUI.color = Color.white;
+
+                        if (!DCFunctions.ValidateLink(url.stringValue))
+                        {
+                            EditorGUILayout.HelpBox("This link is invalid.", MessageType.Error);
+                        }
                     }
+
                 }
+
             }
         }
     
+
         void GetVersions() {
             System.Reflection.MethodInfo updateVersions = typeof(DependencyData).GetMethod("UpdateVersions");
             if (updateVersions != null) {
@@ -408,6 +481,7 @@ namespace Cam.DependencyChecker
             }
         }
     
+
         void RefreshShaderDependenciesFromProject()
         {
             System.Reflection.MethodInfo updateShaders = typeof(DependencyData).GetMethod("GetShaderDependenciesFromProject");
@@ -416,20 +490,32 @@ namespace Cam.DependencyChecker
             }
         }
 
+
         void RefreshShaderDependenciesFromPrefab()
         {
+            EditorUtility.DisplayDialog("Warning", 
+                "Warning: I am only GUESSING shader version and link based on prior knowledge." +
+                "\n\nPlease validate the aforementioned before packaging your product.", "Ok");
+
             System.Reflection.MethodInfo updateShaders = typeof(DependencyData).GetMethod("GetShaderDependenciesFromPrefab");
-            if (updateShaders != null)
-            {
+            if (updateShaders != null) {
                 updateShaders.Invoke(
                     serializedObject.targetObject, 
-                    new object[] { prefab.objectReferenceValue }
+                    new object[] { grabShaderFromPrefab }
                 );
             }
         }
 
+
         void ResetShaders() {
             serializedObject.FindProperty("shaderDependencies").ClearArray();
+        }
+    
+
+        void AddShader() {
+            SerializedProperty shaderDependencies = serializedObject.FindProperty("shaderDependencies");
+            shaderDependencies.InsertArrayElementAtIndex(shaderDependencies.arraySize);
+            serializedObject.ApplyModifiedProperties();
         }
     }
 }

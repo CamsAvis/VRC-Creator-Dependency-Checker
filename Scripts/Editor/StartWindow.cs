@@ -26,7 +26,7 @@ namespace Cam.DependencyChecker
             EditorApplication.delayCall += Init;
         }
 
-        private static void Init()
+        public static void Init()
         {
             EditorApplication.delayCall -= Init;
 
@@ -74,10 +74,7 @@ namespace Cam.DependencyChecker
         bool unityVersionSuccess;
         bool allShadersSuccess;
         bool sdkVersionSuccess;
-
-        public const float WINDOW_WIDTH = 600;
-        public const float WINDOW_HEIGHT = 500;
-        public const float COLUMN_SPACER = 5;
+        bool av3ManagerSuccess;
 
         public const string SDK_VERSION = "2022.06.03.00.04";
         const string R_AVATAR_ICON_PATH = "Cam/Social/Remi";
@@ -91,8 +88,8 @@ namespace Cam.DependencyChecker
         public static void Init()
         {
             StartWindow window = (StartWindow)GetWindow(typeof(StartWindow), true, "Avatars Start Screen");
-            window.minSize = new Vector2(WINDOW_WIDTH, WINDOW_HEIGHT);
-            window.maxSize = new Vector2(WINDOW_WIDTH, WINDOW_HEIGHT);
+            window.minSize = new Vector2(DCConstants.WINDOW_WIDTH, DCConstants.WINDOW_HEIGHT);
+            window.maxSize = new Vector2(DCConstants.WINDOW_WIDTH, DCConstants.WINDOW_HEIGHT);
             window.Show();
         }
 
@@ -171,20 +168,13 @@ namespace Cam.DependencyChecker
             if (DCConstants.FUTURA_FONT == null)
                 Debug.LogError("Font not detected");
 
-            // test
 
-            /*
+            // AV3 Manager
             var av3ManagerCloner = AppDomain.CurrentDomain
                 .GetAssemblies()
                 .SelectMany(x => x.GetTypes())
                 .FirstOrDefault(x => x.FullName?.Equals("VRLabs.AV3Manager.AnimatorCloner") ?? false);
-
-            if (av3ManagerCloner != null) {
-                managerCloner = av3ManagerCloner.GetMethod("MergeControllers");
-            } else {
-                Debug.Log("Failed to find Animator Cloner");
-            }
-            */
+            av3ManagerSuccess = av3ManagerCloner != null;
         }
 
         public void OnGUI()
@@ -208,20 +198,20 @@ namespace Cam.DependencyChecker
 
             using (new EditorGUILayout.HorizontalScope(GUIStyle.none, GUILayout.ExpandWidth(true)))
             {
-                float columnOneWidth = WINDOW_WIDTH / 3f;
-                float columnTwoWidth = WINDOW_WIDTH - columnOneWidth - COLUMN_SPACER - 10;
+                float columnOneWidth = DCConstants.WINDOW_WIDTH / 3f;
+                float columnTwoWidth = DCConstants.WINDOW_WIDTH - columnOneWidth - DCConstants.COLUMN_SPACER - 10;
 
                 using (new EditorGUILayout.VerticalScope(
-                    GUILayout.Width(columnOneWidth), GUILayout.Height(WINDOW_HEIGHT - 5)))
+                    GUILayout.Width(columnOneWidth), GUILayout.Height(DCConstants.WINDOW_HEIGHT - 5)))
                 {
                     DrawSocialLinks();
                     DrawHideOnLoad();
                 }
 
-                GUILayout.Space(COLUMN_SPACER);
+                GUILayout.Space(DCConstants.COLUMN_SPACER);
 
                 using (new EditorGUILayout.VerticalScope(
-                    GUILayout.Width(columnTwoWidth), GUILayout.Height(WINDOW_HEIGHT - 5)))
+                    GUILayout.Width(columnTwoWidth), GUILayout.Height(DCConstants.WINDOW_HEIGHT - 5)))
                 {
                     ShowStarterAssets();
                     ShowDependencies();
@@ -257,7 +247,8 @@ namespace Cam.DependencyChecker
         {
             GUILayout.Label(new GUIContent("Starter Assets"), UIUtility.discordTagStyle);
 
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Height(WINDOW_HEIGHT / 3.0f - 60)))
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, 
+                GUILayout.Height(DCConstants.WINDOW_HEIGHT / 3.0f - 60)))
             {
                 bool allDependenciesSatisfied = unityVersionSuccess && allShadersSuccess && sdkVersionSuccess;
                 using (new EditorGUI.DisabledGroupScope(!allDependenciesSatisfied))
@@ -270,7 +261,7 @@ namespace Cam.DependencyChecker
                         using (new EditorGUI.DisabledGroupScope(true))
                             EditorGUILayout.ObjectField(data.scene, typeof(object), false);
 
-                        if (GUILayout.Button("Open"))
+                        if (GUILayout.Button("Open Scene", GUILayout.Width(150)))
                         {
                             SaveAndOpenScene(data.scene);
                         }
@@ -287,9 +278,12 @@ namespace Cam.DependencyChecker
                         using (new EditorGUI.DisabledGroupScope(true))
                             EditorGUILayout.ObjectField(data.prefab, typeof(object), false);
 
-                        if (GUILayout.Button("Place Into Scene"))
+                        if (GUILayout.Button("Place Into Scene", GUILayout.Width(150)))
                         {
-                            PlacePrefabIntoScene(data.prefab);
+                            GameObject instanced = InstantiatePrefabAndReturn(data.prefab);
+                            EditorGUIUtility.PingObject(instanced);
+                            Selection.activeGameObject = instanced;
+                            SceneView.FrameLastActiveSceneView();
                         }
                         EditorGUILayout.EndHorizontal();
                     }
@@ -297,13 +291,13 @@ namespace Cam.DependencyChecker
             }
         }
 
-        static void PlacePrefabIntoScene(GameObject prefab)
+        static GameObject InstantiatePrefabAndReturn(GameObject prefab)
         {
             GameObject instantiatedPrefab = GameObject.Instantiate(prefab);
             instantiatedPrefab.name = prefab.name;
             instantiatedPrefab.transform.position = Vector3.zero;
             instantiatedPrefab.transform.rotation = Quaternion.identity;
-            EditorGUIUtility.PingObject(instantiatedPrefab);
+            return instantiatedPrefab;
         }
 
         void SaveAndOpenScene(SceneAsset scene)
@@ -316,18 +310,17 @@ namespace Cam.DependencyChecker
                 "no"
             );
 
-            if (saveScene)
-            {
+            if (saveScene) {
                 EditorSceneManager.SaveScene(currentScene, currentScene.path);
             }
-
+            
             EditorSceneManager.OpenScene(AssetDatabase.GetAssetPath(scene));
         }
 
         void DrawHideOnLoad()
         {
-            Rect labelRect = new Rect(5, WINDOW_HEIGHT - 45, WINDOW_WIDTH, 20);
-            Rect buttonRect = new Rect(5, WINDOW_HEIGHT - 45 + 20, 200, 20);
+            Rect labelRect = new Rect(5, DCConstants.WINDOW_HEIGHT - 45, DCConstants.WINDOW_WIDTH, 20);
+            Rect buttonRect = new Rect(5, DCConstants.WINDOW_HEIGHT - 45 + 20, 200, 20);
 
             GUI.Label(labelRect, "Show this window on load?");
             if (EditorPrefs.HasKey(DCConstants.HIDE_ON_LOAD_STRING))
@@ -362,7 +355,8 @@ namespace Cam.DependencyChecker
         {
             //GUILayout.Label("Project Dependency Verification", EditorStyles.whiteLargeLabel);
             GUILayout.Label(new GUIContent("Dependencies"), UIUtility.discordTagStyle);
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Height(WINDOW_HEIGHT * 2.0f / 3.0f + 10)))
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Height(
+                DCConstants.WINDOW_HEIGHT * 2.0f / 3.0f + 10)))
             {
                 EditorGUILayout.BeginVertical("box");
                 scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
@@ -448,18 +442,20 @@ namespace Cam.DependencyChecker
                                 MessageType.Error,
                                 true
                             );
-                            if (GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(38)))
+                            if (sd.link.Length > 0 && GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(38)))
                                 Application.OpenURL(sd.link);
                             break;
                         case ShaderDependency.ImportStatus.ABSENT:
                             allShadersSuccess = false;
+                            string version = sd.version.Length > 0 
+                                ? $"This project requires '{sd.shaderFriendlyName}' version '{sd.version}'"
+                                : $"This project requires '{sd.shaderFriendlyName}'";
                             EditorGUILayout.HelpBox(
-                                $"You have an invalid version of '{sd.shaderFriendlyName}' installed.\n" +
-                                $"This project requires '{sd.shaderFriendlyName}' version '{sd.version}'",
+                                $"You do not have '{sd.shaderFriendlyName}' installed.\n{version}",
                                 MessageType.Error,
                                 true
                             );
-                            if (GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(38)))
+                            if (sd.link.Length > 0 && GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(38)))
                                 Application.OpenURL(sd.link);
                             break;
                     }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿#if VRC_SDK_VRCSDK3
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
@@ -7,6 +8,8 @@ namespace Cam.DependencyChecker
     [CreateAssetMenu(fileName = "Dependency Data", menuName = "Cam/Dependency Data")]
     public class DependencyData : ScriptableObject
     {
+        public bool lockUI;
+
         public SceneAsset scene;
         public GameObject prefab;
         public Texture2D thumbnail;
@@ -16,6 +19,7 @@ namespace Cam.DependencyChecker
 
         public List<SocialLink> socialLinks = new List<SocialLink>();
         public List<ShaderDependency> shaderDependencies;
+
 
         public void GetShaderDependenciesFromProject()
         {
@@ -27,9 +31,24 @@ namespace Cam.DependencyChecker
             {
                 string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
                 Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(assetPath);
-                if (shader != null && !DCConstants.ShaderInBlacklist(shader.name) && !DCConstants.DEFAULT_SHADER_NAMES.Contains(shader.name)) {
+
+                if (shader.name.Contains("Locked"))
+                {
+                    EditorUtility.DisplayDialog(
+                        "Failed to Retrieve Locked Shader",
+                        "A shader on this model is locked, I recommend unlocking all shaders before " +
+                        "running this script.",
+                        "Ok"
+                    );
+                    continue;
+                }
+
+                bool validShader = shader != null 
+                    && !DCFunctions.ShaderInBlacklist(shader.name) 
+                    && !DCConstants.DEFAULT_SHADER_NAMES.Contains(shader.name);
+                if (validShader) {
                     ShaderDependency sd = new ShaderDependency(shader);
-                    if(!shaderDependencies.Contains(sd))
+                    if (!shaderDependencies.Contains(sd))
                         shaderDependencies.Add(sd);
                 }
             }
@@ -51,14 +70,36 @@ namespace Cam.DependencyChecker
                         continue;
 
                     Shader shader = mat.shader;
-                    if (shader == null || DCConstants.DEFAULT_SHADER_NAMES.Contains(shader.name))
+                    if (shader == null
+                        || DCConstants.DEFAULT_SHADER_NAMES.Contains(shader.name)) {
                         continue;
+                    }
+
+                    if (shader.name.Contains("Locked")) {
+                        EditorUtility.DisplayDialog(
+                            "Failed to Retrieve Locked Shader",
+                            "A shader on this model is locked, I recommend unlocking all shaders before " +
+                            "running this script.", 
+                            "Ok"
+                        );
+                        continue;
+                    }
 
                     ShaderDependency dep = new ShaderDependency(shader);
                     if (!shaderDependencies.Contains(dep))
                         shaderDependencies.Add(dep);
                 }
             }
+
+            /*
+            bool ShaderNameIsBlacklisted(string shaderName) {
+                foreach(string s in DCConstants.SHADER_BLACKLIST_KEYWORDS) {
+                    if (shaderName.Contains(s))
+                        return true;
+                }
+                return false;
+            }
+            */
         }
 
         public void UpdateVersions()
@@ -68,3 +109,4 @@ namespace Cam.DependencyChecker
         }
     }
 }
+#endif

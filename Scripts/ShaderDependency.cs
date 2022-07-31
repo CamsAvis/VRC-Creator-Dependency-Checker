@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Cam.DependencyChecker
 {
@@ -25,6 +22,7 @@ namespace Cam.DependencyChecker
             Generate(shader);
         }
 
+
         public void Generate(Shader shader)
         {
             if (shader == null)
@@ -41,64 +39,65 @@ namespace Cam.DependencyChecker
                 string[] shaderPathing = shaderName.Split('/');
                 shaderFriendlyName = shaderPathing[Mathf.Max(0, shaderPathing.Length - 1)];
 
-                Debug.Log($"\tShader Friendly Name: '{shaderFriendlyName}'");
+                if (shaderName.ToLower().Contains("poi")) {
+                    version = DCFunctions.GetPoiShaderVersion(shader);
 
-                if (shaderName.ToLower().Contains("poi"))
-                {
-                    Debug.Log($"\tPoiyomi Shader Detected");
-                    version = GetPoiShaderVersion(shader);
-                    Debug.Log($"\tPoiyomi Shader version '{version}'");
+                    // guessing link
+                    if (version != null && version.Length > 0) {
+                        if (shaderName.ToLower().Contains("toon")) {
+                            link = $"https://github.com/poiyomi/PoiyomiToonShader/releases/tag/V{version}";
+                        } else if(shaderName.ToLower().Contains("pro")) {
+                            link = "https://www.patreon.com/poiyomi";
+                        }
+                    }
+                }
+
+                if (shaderName.ToLower().Contains("liltoon")) {
+                    version = DCFunctions.GetLilToonShaderVersion(shader);
+
+                    // guessing link
+                    if (version != null && version.Length > 0) {
+                        link = $"https://github.com/lilxyzw/lilToon/releases/tag/{version}";
+                    }
+                }
+
+                if(shaderName.ToLower().Contains("arktoon")) {
+                    link = "https://github.com/arktoon-archive/arktoon";
                 }
             }
         }
 
+
         public void CheckImportStatus()
         {
             Shader shader = Shader.Find(shaderName);
-            if (shader != null) {
-                this.importStatus = ValidateShaderVersions(shader)
+            if (shader == null) {
+                this.importStatus = ImportStatus.ABSENT;
+            } else {
+                this.importStatus = ValidateShaderVersion(shader)
                     ? ImportStatus.PRESENT
                     : ImportStatus.INVALID_VERSION;
-            } else {
-                this.importStatus = ImportStatus.ABSENT;
             }
         }
+        
 
-        bool ValidateShaderVersions(Shader shader) {
+        bool ValidateShaderVersion(Shader shader) {
             // Poiyomi Shader
-            string sv = GetPoiShaderVersion(shader);
-            if(sv != null && sv.Length > 0)
-                return sv.Equals(version);
+            string psv = DCFunctions.GetPoiShaderVersion(shader);
+            if(psv != null && psv.Length > 0)
+                return psv.Equals(version);
+
+            // LilToon Shader
+            string lsv = DCFunctions.GetLilToonShaderVersion(shader);
+            if (lsv != null && lsv.Length > 0)
+                return lsv.Equals(version);
 
             // ...
 
             return true;
         }
 
-        static string GetPoiShaderVersion(Shader shader)
-        {
-            string shader_label = string.Empty;
-            for (int i = 0; i < shader.GetPropertyCount(); i++)
-            {
-                if (shader.GetPropertyName(i).Equals(DCConstants.POI_SHADER_VERSION_PROPERTY))
-                {
-                    shader_label = shader.GetPropertyDescription(i);
-                    break;
-                }
-            }
-
-            MatchCollection mc = Regex.Matches(shader_label, DCConstants.POI_VERSION_REGEX);
-            if (mc.Count > 0) { 
-                for (int i = 0; i < mc.Count; i++)
-                {
-                    Debug.Log($"\t\t\t{i}) Poiyomi shader Regex match: '{mc[i]}'");
-                    shader_label = mc[i].ToString();
-                }
-            }
-
-            return shader_label;
-        }
-
+        
         public override bool Equals(object obj)
         {
             if (obj.GetType().Equals(this.GetType()))
@@ -108,6 +107,12 @@ namespace Cam.DependencyChecker
             }
 
             return false;
+        }
+
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
     }
 }
