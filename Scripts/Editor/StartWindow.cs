@@ -14,10 +14,6 @@ namespace Cam.DependencyChecker
 {
     public class ShowStartWindow
     {
-        public const string HIDE_ON_LOAD = "cam_start_window_hide_on_load";
-        public const string HAS_OPENED_THIS_SESSION = "cam_start_window_has_opened_this_session";
-        public const string FIRST_LAUNCH = "cam_start_window_first_launch";
-        public const string SDK_DOWNLOAD_URL = "https://vrchat.com/home/download";
 
         [InitializeOnLoadMethod]
         private static void RegisterOpen()
@@ -51,20 +47,20 @@ namespace Cam.DependencyChecker
         {
             string[] paths = Application.dataPath.Split('/');
             string projectName = paths[paths.Length - 2].Replace(" ", "_").ToLower();
-            return $"{HIDE_ON_LOAD}_{projectName}";
+            return $"{DCConstants.HIDE_ON_LOAD}_{projectName}";
         }
 
         public static string GetFirstLaunchPath()
         {
             string[] paths = Application.dataPath.Split('/');
             string projectName = paths[paths.Length - 2].Replace(" ", "_").ToLower();
-            return $"{FIRST_LAUNCH}_{projectName}";
+            return $"{DCConstants.FIRST_LAUNCH}_{projectName}";
         }
         public static string GetHasOpenedPath()
         {
             string[] paths = Application.dataPath.Split('/');
             string projectName = paths[paths.Length - 2].Replace(" ", "_").ToLower();
-            return $"{HAS_OPENED_THIS_SESSION}_{projectName}";
+            return $"{DCConstants.HAS_OPENED_THIS_SESSION}_{projectName}";
         }
     }
 

@@ -1,5 +1,4 @@
-﻿#if VRC_SDK_VRCSDK3
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
@@ -19,7 +18,6 @@ namespace Cam.DependencyChecker
 
         public List<SocialLink> socialLinks = new List<SocialLink>();
         public List<ShaderDependency> shaderDependencies;
-
 
         public void GetShaderDependenciesFromProject()
         {
@@ -90,23 +88,16 @@ namespace Cam.DependencyChecker
                         shaderDependencies.Add(dep);
                 }
             }
-
-            /*
-            bool ShaderNameIsBlacklisted(string shaderName) {
-                foreach(string s in DCConstants.SHADER_BLACKLIST_KEYWORDS) {
-                    if (shaderName.Contains(s))
-                        return true;
-                }
-                return false;
-            }
-            */
         }
 
         public void UpdateVersions()
         {
             this.unityVersion = Application.unityVersion;
+#if VRC_SDK_VRCSDK3
             this.vrcsdkVersion = VRC.Core.SDKClientUtilities.GetSDKVersionDate();
+#else
+            this.vrcsdkVersion = string.Empty;
+#endif
         }
     }
 }
-#endif
