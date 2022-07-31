@@ -385,7 +385,6 @@ namespace Cam.DependencyChecker
             }
         }
 
-
         void DrawSocialLinks()
         {
             if (socialLinks == null)
@@ -465,7 +464,6 @@ namespace Cam.DependencyChecker
             }
         }
     
-
         void GetVersions() {
             System.Reflection.MethodInfo updateVersions = typeof(DependencyData).GetMethod("UpdateVersions");
             if (updateVersions != null) {
@@ -473,7 +471,6 @@ namespace Cam.DependencyChecker
             }
         }
     
-
         void RefreshShaderDependenciesFromProject()
         {
             System.Reflection.MethodInfo updateShaders = typeof(DependencyData).GetMethod("GetShaderDependenciesFromProject");
@@ -481,7 +478,6 @@ namespace Cam.DependencyChecker
                 updateShaders.Invoke(serializedObject.targetObject, null);
             }
         }
-
 
         void RefreshShaderDependenciesFromPrefab()
         {
@@ -498,11 +494,9 @@ namespace Cam.DependencyChecker
             }
         }
 
-
         void ResetShaders() {
             serializedObject.FindProperty("shaderDependencies").ClearArray();
         }
-    
 
         void AddShader() {
             SerializedProperty shaderDependencies = serializedObject.FindProperty("shaderDependencies");

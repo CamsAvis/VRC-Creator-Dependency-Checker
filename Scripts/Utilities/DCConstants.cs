@@ -15,17 +15,17 @@ namespace Cam.DependencyChecker
         public const float COLUMN_SPACER = 5;
         public static readonly string WINDOW_NAME = "Avatars Start Screen";
 
+        public const string HIDE_ON_LOAD = "cam_start_window_hide_on_load";
+        public const string HAS_OPENED_THIS_SESSION = "cam_start_window_has_opened_this_session";
+        public const string FIRST_LAUNCH = "cam_start_window_first_launch";
+        public const string SDK_DOWNLOAD_URL = "https://vrchat.com/home/download";
+
         //////////////////
         // EDITOR PREFS //
         //////////////////
         private static string[] paths = Application.dataPath.Split('/');
         private static string projectName = paths[paths.Length - 2].Replace(" ", "_").ToLower();
         public static readonly string HIDE_ON_LOAD_STRING = $"cam_dc_hide_on_load_{projectName}";
-
-        ///////////
-        // LINKS //
-        ///////////
-        public const string SDK_DOWNLOAD_URL = "https://vrchat.com/home/download";
 
         ///////////
         // PATHS //
