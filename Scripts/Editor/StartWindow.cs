@@ -201,9 +201,11 @@ namespace Cam.DependencyChecker
         public void OnGUI()
         {
             // load data if not exists
-            if (data == null) {
+            if (data == null)
+            {
                 data = AssetDatabase.LoadAssetAtPath<DependencyData>(DCConstants.A_DEPENDENCY_DATA_PATH);
-                if (data != null) {
+                if (data != null)
+                {
                     data.shaderDependencies.ForEach(sd => sd.CheckImportStatus());
                 }
                 return;
@@ -234,7 +236,8 @@ namespace Cam.DependencyChecker
             }
         }
 
-        void InitStyles() {
+        void InitStyles()
+        {
             discordTagStyle = new GUIStyle(GUI.skin.label)
             {
                 fontSize = 15,
@@ -264,10 +267,11 @@ namespace Cam.DependencyChecker
         {
             GUILayout.Label(new GUIContent("Helpful Links"), discordTagStyle);
 
-            if (data.thumbnail != null) {
+            if (data.thumbnail != null)
+            {
                 Rect curViewRect = EditorGUILayout.GetControlRect();
                 curViewRect = new Rect(
-                  curViewRect.x+40, curViewRect.y, 128, 128
+                  curViewRect.x + 40, curViewRect.y, 128, 128
                 );
                 GUI.DrawTexture(curViewRect, data.thumbnail);
             }
@@ -290,7 +294,7 @@ namespace Cam.DependencyChecker
         {
             GUILayout.Label(new GUIContent("Starter Assets"), UIUtility.discordTagStyle);
 
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, 
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox,
                 GUILayout.Height(DCConstants.WINDOW_HEIGHT / 3.0f - 60)))
             {
                 bool allDependenciesSatisfied = unityVersionSuccess && allShadersSuccess && sdkVersionSuccess;
@@ -353,10 +357,11 @@ namespace Cam.DependencyChecker
                 "no"
             );
 
-            if (saveScene) {
+            if (saveScene)
+            {
                 EditorSceneManager.SaveScene(currentScene, currentScene.path);
             }
-            
+
             EditorSceneManager.OpenScene(AssetDatabase.GetAssetPath(scene));
         }
 
@@ -401,12 +406,12 @@ namespace Cam.DependencyChecker
 
             //Rect currentViewRect = EditorGUILayout.GetControlRect(false);
             GUILayout.Label("Dependencies", UIUtility.discordTagStyle);
-            using (new EditorGUI.DisabledGroupScope(allDependenciesSatisfied))
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Height(boxHeight)))
             {
-                using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Height(boxHeight)))
+                EditorGUILayout.BeginVertical("box");
+                scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
+                using (new EditorGUI.DisabledGroupScope(allDependenciesSatisfied))
                 {
-                    EditorGUILayout.BeginVertical("box");
-                    scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
 
 
                     if (allDependenciesSatisfied)
@@ -491,7 +496,8 @@ namespace Cam.DependencyChecker
                 }
             }
 
-            if (allDependenciesSatisfied) {
+            if (allDependenciesSatisfied)
+            {
                 GUI.DrawTexture(new Rect(265, 200, 256, 256), DCConstants.CHECK_ICON_HP);
                 GUI.DrawTexture(new Rect(500, 430, 64, 64), DCConstants.PEEPO_HYPERS_ICON);
             }
@@ -504,9 +510,12 @@ namespace Cam.DependencyChecker
             {
                 case ShaderDependency.ImportStatus.PRESENT:
                     string message = string.Empty;
-                    if (sd.version != null && sd.version.Length > 0) {
+                    if (sd.version != null && sd.version.Length > 0)
+                    {
                         message = $"'{sd.shaderFriendlyName}' v{sd.version} has been detected!";
-                    } else if(sd.version != null) {
+                    }
+                    else if (sd.version != null)
+                    {
                         message = $"'{sd.shaderFriendlyName}' has been detected!";
                     }
                     EditorGUILayout.HelpBox(new GUIContent(message, DCConstants.CHECK_ICON, ""), true);
