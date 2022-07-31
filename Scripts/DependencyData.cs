@@ -93,11 +93,16 @@ namespace Cam.DependencyChecker
         public void UpdateVersions()
         {
             this.unityVersion = Application.unityVersion;
-#if VRC_SDK_VRCSDK3
-            this.vrcsdkVersion = VRC.Core.SDKClientUtilities.GetSDKVersionDate();
-#else
-            this.vrcsdkVersion = string.Empty;
-#endif
+
+            // get VRCSDK version by Reflection
+            System.Type vrc = System.Type.GetType(@"VRC.Core.SDKClientUtilities");
+            if (vrc != null) {
+                System.Reflection.MethodInfo getDate = vrc.GetMethod("GetSDKVersionDate");
+                if (getDate != null)
+                {
+                    this.vrcsdkVersion = getDate.Invoke(null, null).ToString();
+                }
+            }
         }
     }
 }
