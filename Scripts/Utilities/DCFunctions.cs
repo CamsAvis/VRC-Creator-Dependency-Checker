@@ -61,7 +61,7 @@ namespace Cam.DependencyChecker
                     goto Failed;
 
                 // deserialize
-                LilToonPackageJSON lilToonPackageJSON = JsonUtility.FromJson<LilToonPackageJSON>(packageJson.text);
+                DCLTPackageJSON lilToonPackageJSON = JsonUtility.FromJson<DCLTPackageJSON>(packageJson.text);
                 if (lilToonPackageJSON == null)
                     goto Failed;
 

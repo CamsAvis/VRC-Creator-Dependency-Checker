@@ -5,7 +5,7 @@ using UnityEditor;
 namespace Cam.DependencyChecker
 {
     [CreateAssetMenu(fileName = "Dependency Data", menuName = "Cam/Dependency Data")]
-    public class DependencyData : ScriptableObject
+    public class DCData : ScriptableObject
     {
         public bool lockUI;
 
@@ -17,12 +17,12 @@ namespace Cam.DependencyChecker
         public string vrcsdkVersion;
 
         public List<SocialLink> socialLinks = new List<SocialLink>();
-        public List<ShaderDependency> shaderDependencies;
+        public List<DCShaderDependency> shaderDependencies;
 
         public void GetShaderDependenciesFromProject()
         {
             if(shaderDependencies == null)
-                shaderDependencies = new List<ShaderDependency>();
+                shaderDependencies = new List<DCShaderDependency>();
 
             string[] guids = AssetDatabase.FindAssets(string.Format("t:Shader"));
             for(int i = 0; i < guids.Length; i++)
@@ -45,7 +45,7 @@ namespace Cam.DependencyChecker
                     && !DCFunctions.ShaderInBlacklist(shader.name) 
                     && !DCConstants.DEFAULT_SHADER_NAMES.Contains(shader.name);
                 if (validShader) {
-                    ShaderDependency sd = new ShaderDependency(shader);
+                    DCShaderDependency sd = new DCShaderDependency(shader);
                     if (!shaderDependencies.Contains(sd))
                         shaderDependencies.Add(sd);
                 }
@@ -55,7 +55,7 @@ namespace Cam.DependencyChecker
         public void GetShaderDependenciesFromPrefab(GameObject prefab)
         {
             if (shaderDependencies == null)
-                shaderDependencies = new List<ShaderDependency>();
+                shaderDependencies = new List<DCShaderDependency>();
 
             Debug.Log($"Retrieving particle systems from {prefab.name}");
             Renderer[] renderers = prefab.gameObject.GetComponentsInChildren<Renderer>(prefab);
@@ -83,7 +83,7 @@ namespace Cam.DependencyChecker
                         continue;
                     }
 
-                    ShaderDependency dep = new ShaderDependency(shader);
+                    DCShaderDependency dep = new DCShaderDependency(shader);
                     bool validShader = shader != null
                         && !DCFunctions.ShaderInBlacklist(shader.name)
                         && !DCConstants.DEFAULT_SHADER_NAMES.Contains(shader.name);

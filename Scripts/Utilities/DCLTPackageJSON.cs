@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Cam.DependencyChecker
 {
-    public class LilToonPackageJSON
+    public class DCLTPackageJSON
     {
         public string name;
         public string version;

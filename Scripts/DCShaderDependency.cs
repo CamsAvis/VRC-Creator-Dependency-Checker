@@ -3,7 +3,7 @@
 namespace Cam.DependencyChecker
 {
     [System.Serializable]
-    public class ShaderDependency
+    public class DCShaderDependency
     {
         public enum ImportStatus {
             PRESENT, INVALID_VERSION, ABSENT
@@ -18,7 +18,7 @@ namespace Cam.DependencyChecker
         public ImportStatus importStatus;
 
 
-        public ShaderDependency(Shader shader) {
+        public DCShaderDependency(Shader shader) {
             Generate(shader);
         }
 
@@ -102,7 +102,7 @@ namespace Cam.DependencyChecker
         {
             if (obj.GetType().Equals(this.GetType()))
             {
-                Shader otherShader = ((ShaderDependency)obj).shader;
+                Shader otherShader = ((DCShaderDependency)obj).shader;
                 return otherShader.Equals(this.shader);
             }
 

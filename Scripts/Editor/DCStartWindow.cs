@@ -76,10 +76,10 @@ namespace Cam.DependencyChecker
         static GUIStyle discordTagStyle;
         Vector2 scrollPos;
 
-        DependencyData data;
-        List<ShaderDependency> absentShaderDependencies;
-        List<ShaderDependency> invalidVersionShaderDependencies;
-        List<ShaderDependency> presentShaderDependencies;
+        DCData data;
+        List<DCShaderDependency> absentShaderDependencies;
+        List<DCShaderDependency> invalidVersionShaderDependencies;
+        List<DCShaderDependency> presentShaderDependencies;
 
         [MenuItem("Cam/Start", false, 1999)]
         public static void Init()
@@ -100,33 +100,33 @@ namespace Cam.DependencyChecker
         public void UpdateWindow()
         {
             // Dependency Data Stufff
-            data = AssetDatabase.LoadAssetAtPath<DependencyData>(DCConstants.A_DEPENDENCY_DATA_PATH);
+            data = AssetDatabase.LoadAssetAtPath<DCData>(DCConstants.A_DEPENDENCY_DATA_PATH);
             if (data == null)
             {
-                data = ScriptableObject.CreateInstance<DependencyData>();
+                data = ScriptableObject.CreateInstance<DCData>();
                 AssetDatabase.CreateAsset(data, DCConstants.A_DEPENDENCY_DATA_PATH);
                 EditorUtility.SetDirty(data);
             }
             else
             {
-                absentShaderDependencies = new List<ShaderDependency>();
-                invalidVersionShaderDependencies = new List<ShaderDependency>();
-                presentShaderDependencies = new List<ShaderDependency>();
+                absentShaderDependencies = new List<DCShaderDependency>();
+                invalidVersionShaderDependencies = new List<DCShaderDependency>();
+                presentShaderDependencies = new List<DCShaderDependency>();
 
                 for (int i = 0; i < data.shaderDependencies.Count; i++)
                 {
                     data.shaderDependencies[i].CheckImportStatus();
                     switch (data.shaderDependencies[i].importStatus)
                     {
-                        case ShaderDependency.ImportStatus.ABSENT:
+                        case DCShaderDependency.ImportStatus.ABSENT:
                             allShadersSuccess = false;
                             absentShaderDependencies.Add(data.shaderDependencies[i]);
                             break;
-                        case ShaderDependency.ImportStatus.INVALID_VERSION:
+                        case DCShaderDependency.ImportStatus.INVALID_VERSION:
                             invalidVersionShaderDependencies.Add(data.shaderDependencies[i]);
                             allShadersSuccess = false;
                             break;
-                        case ShaderDependency.ImportStatus.PRESENT:
+                        case DCShaderDependency.ImportStatus.PRESENT:
                             presentShaderDependencies.Add(data.shaderDependencies[i]);
                             break;
                     }
@@ -196,7 +196,7 @@ namespace Cam.DependencyChecker
             // load data if not exists
             if (data == null)
             {
-                data = AssetDatabase.LoadAssetAtPath<DependencyData>(DCConstants.A_DEPENDENCY_DATA_PATH);
+                data = AssetDatabase.LoadAssetAtPath<DCData>(DCConstants.A_DEPENDENCY_DATA_PATH);
                 if (data != null)
                 {
                     data.shaderDependencies.ForEach(sd => sd.CheckImportStatus());
@@ -477,12 +477,12 @@ namespace Cam.DependencyChecker
             }
         }
 
-        void DrawShaderDependency(ShaderDependency sd)
+        void DrawShaderDependency(DCShaderDependency sd)
         {
             EditorGUILayout.BeginHorizontal();
             switch (sd.importStatus)
             {
-                case ShaderDependency.ImportStatus.PRESENT:
+                case DCShaderDependency.ImportStatus.PRESENT:
                     string message = string.Empty;
                     if (sd.version != null && sd.version.Length > 0)
                     {
@@ -494,7 +494,7 @@ namespace Cam.DependencyChecker
                     }
                     EditorGUILayout.HelpBox(new GUIContent(message, DCConstants.CHECK_ICON, ""), true);
                     break;
-                case ShaderDependency.ImportStatus.INVALID_VERSION:
+                case DCShaderDependency.ImportStatus.INVALID_VERSION:
                     allShadersSuccess = false;
                     EditorGUILayout.HelpBox(
                         $"You have an invalid version of '{sd.shaderFriendlyName}' installed.\n" +
@@ -507,7 +507,7 @@ namespace Cam.DependencyChecker
 
                     allShadersSuccess = false;
                     break;
-                case ShaderDependency.ImportStatus.ABSENT:
+                case DCShaderDependency.ImportStatus.ABSENT:
                     allShadersSuccess = false;
                     string version = sd.version.Length > 0
                         ? $"This project requires '{sd.shaderFriendlyName}' version '{sd.version}'"

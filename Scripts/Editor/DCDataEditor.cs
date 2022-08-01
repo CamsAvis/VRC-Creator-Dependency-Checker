@@ -4,8 +4,8 @@ using UnityEditor;
 
 namespace Cam.DependencyChecker
 {
-    [CustomEditor(typeof(DependencyData))]
-    public class DependencyDataEditor : Editor
+    [CustomEditor(typeof(DCData))]
+    public class DCDataEditor : Editor
     {
         bool ValidThumbnail;
         Texture2D prefabTexture;
@@ -178,7 +178,7 @@ namespace Cam.DependencyChecker
                                     serializedObject.ApplyModifiedProperties();
                                     if (shaderObject != null)
                                     {
-                                        DependencyData targetObject = this.target as DependencyData;
+                                        DCData targetObject = this.target as DCData;
                                         targetObject.shaderDependencies[i].Generate(shaderObject);
                                         serializedObject.Update();
                                     }
@@ -461,7 +461,7 @@ namespace Cam.DependencyChecker
         }
     
         void GetVersions() {
-            System.Reflection.MethodInfo updateVersions = typeof(DependencyData).GetMethod("UpdateVersions");
+            System.Reflection.MethodInfo updateVersions = typeof(DCData).GetMethod("UpdateVersions");
             if (updateVersions != null) {
                 updateVersions.Invoke(serializedObject.targetObject, null);
             }
@@ -469,7 +469,7 @@ namespace Cam.DependencyChecker
     
         void RefreshShaderDependenciesFromProject()
         {
-            System.Reflection.MethodInfo updateShaders = typeof(DependencyData).GetMethod("GetShaderDependenciesFromProject");
+            System.Reflection.MethodInfo updateShaders = typeof(DCData).GetMethod("GetShaderDependenciesFromProject");
             if (updateShaders != null) {
                 updateShaders.Invoke(serializedObject.targetObject, null);
             }
@@ -481,7 +481,7 @@ namespace Cam.DependencyChecker
                 "Warning: I am only GUESSING shader version and link based on prior knowledge." +
                 "\n\nPlease validate the aforementioned before packaging your product.", "Ok");
 
-            System.Reflection.MethodInfo updateShaders = typeof(DependencyData).GetMethod("GetShaderDependenciesFromPrefab");
+            System.Reflection.MethodInfo updateShaders = typeof(DCData).GetMethod("GetShaderDependenciesFromPrefab");
             if (updateShaders != null) {
                 updateShaders.Invoke(
                     serializedObject.targetObject, 

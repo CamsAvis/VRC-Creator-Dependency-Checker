@@ -6,11 +6,11 @@ using UnityEditor;
 namespace Cam.DependencyChecker
 {
     [InitializeOnLoad]
-    static class DependencyAutoRefresher
+    static class DCAutoRefresher
     {
         public const string SDK_DOWNLOAD_URL = "https://www.vrchat.com/home/download";
 
-        static DependencyAutoRefresher() {
+        static DCAutoRefresher() {
             UpdateWindow("");
             AssetDatabase.importPackageCompleted += UpdateWindow;
 
