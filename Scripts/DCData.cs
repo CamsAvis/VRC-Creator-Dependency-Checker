@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System.Linq;
+using System.Reflection;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
@@ -97,32 +99,17 @@ namespace Cam.DependencyChecker
         {
             this.unityVersion = Application.unityVersion;
 
-            //#if VRC_SDK_VRCSDK3
-            //            this.vrcsdkVersion = VRC.Core.SDKClientUtilities.GetSDKVersionDate();
-            //#endif
-            System.Type vrc = System.Type.GetType(@"VRC.SDK3.Avatars.Components.VRCAvatarDescriptor");
-            if(vrc == null) {
-                Debug.Log("Failed to find VRC class");
-            } else
-            {
-                Debug.Log("Found VRC class!");
-            }
+            var getSDKVersionDate = System.AppDomain.CurrentDomain
+                .GetAssemblies()
+                .SelectMany(x => x.GetTypes())
+                .FirstOrDefault(x => x.FullName?.Equals("VRC.Core.SDKClientUtilities") ?? false);
 
-            /* get VRCSDK version by Reflection
-            System.Type vrc = System.Type.GetType("VRC.Core.SDKClientUtilities");
-            if (vrc == null)
+            if(getSDKVersionDate != null)
             {
-                Debug.Log("Failed to retrieve VRC class");
-                return;
+                BindingFlags bf = BindingFlags.Static | BindingFlags.Public;
+                object o = getSDKVersionDate.GetMethod("GetSDKVersionDate", bf).Invoke(null, null);
+                this.vrcsdkVersion = o == null ? string.Empty : (string)o;
             }
-
-            System.Reflection.MethodInfo getDate = vrc.GetMethod("GetSDKVersionDate");
-            if (getDate == null)
-            {
-                Debug.Log("Failed to retrieve date function");
-                return;
-            }
-              */  
         }
     }
 }

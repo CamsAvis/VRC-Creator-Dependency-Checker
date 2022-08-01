@@ -10,8 +10,10 @@ namespace Cam.DependencyChecker
         // MISC //
         //////////
         public const int THUMBNAIL_SIZE = 128;
-        public const float WINDOW_WIDTH = 600;
-        public const float WINDOW_HEIGHT = 500;
+        public const float WINDOW_WIDTH = 700;
+        //public const float WINDOW_WIDTH = 600;
+        //public const float WINDOW_HEIGHT = 500;
+        public const float WINDOW_HEIGHT = 600;
         public const float COLUMN_SPACER = 5;
         public static readonly string WINDOW_NAME = "Avatars Start Screen";
 

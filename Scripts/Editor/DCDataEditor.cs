@@ -454,9 +454,7 @@ namespace Cam.DependencyChecker
                             EditorGUILayout.HelpBox("This link is invalid.", MessageType.Error);
                         }
                     }
-
                 }
-
             }
         }
     

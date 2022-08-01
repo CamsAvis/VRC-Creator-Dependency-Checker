@@ -89,5 +89,14 @@ namespace Cam.DependencyChecker
         public static bool ValidateLink(string url) {
             return System.Uri.IsWellFormedUriString(url, System.UriKind.Absolute);
         }
+
+        public static GameObject InstantiatePrefabAndReturn(GameObject prefab)
+        {
+            GameObject instantiatedPrefab = GameObject.Instantiate(prefab);
+            instantiatedPrefab.name = prefab.name;
+            instantiatedPrefab.transform.position = Vector3.zero;
+            instantiatedPrefab.transform.rotation = Quaternion.identity;
+            return instantiatedPrefab;
+        }
     }
 }

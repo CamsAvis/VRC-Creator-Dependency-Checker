@@ -208,8 +208,9 @@ namespace Cam.DependencyChecker
 
             using (new EditorGUILayout.HorizontalScope(GUIStyle.none, GUILayout.ExpandWidth(true)))
             {
+                // test
                 float columnOneWidth = DCConstants.WINDOW_WIDTH / 3f;
-                float columnTwoWidth = DCConstants.WINDOW_WIDTH - columnOneWidth - DCConstants.COLUMN_SPACER - 10;
+                float columnTwoWidth = DCConstants.WINDOW_WIDTH - columnOneWidth - DCConstants.COLUMN_SPACER - 5;
 
                 using (new EditorGUILayout.VerticalScope(
                     GUILayout.Width(columnOneWidth), GUILayout.Height(DCConstants.WINDOW_HEIGHT - 5)))
@@ -223,9 +224,19 @@ namespace Cam.DependencyChecker
                 using (new EditorGUILayout.VerticalScope(
                     GUILayout.Width(columnTwoWidth), GUILayout.Height(DCConstants.WINDOW_HEIGHT - 5)))
                 {
-                    ShowStarterAssets();
+                    if (data.prefab != null || data.scene != null) {
+                        ShowStarterAssets();
+                    }
                     ShowDependencies();
                 }
+            }
+
+
+            bool allDependenciesSatisfied = unityVersionSuccess && allShadersSuccess && sdkVersionSuccess;
+            if (allDependenciesSatisfied)
+            {
+                GUI.DrawTexture(new Rect(280+50, 225 + 60, 256, 256), DCConstants.CHECK_ICON_HP);
+                GUI.DrawTexture(new Rect(500 + 100, 430 + 100, 64, 64), DCConstants.PEEPO_HYPERS_ICON);
             }
         }
 
@@ -268,10 +279,10 @@ namespace Cam.DependencyChecker
 
         void ShowStarterAssets()
         {
-            GUILayout.Label(new GUIContent("Starter Assets"), discordTagStyle);
+            GUILayout.Label(new GUIContent("Get Started!"), discordTagStyle);
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox,
-                GUILayout.Height(DCConstants.WINDOW_HEIGHT / 3.0f - 60)))
+                GUILayout.Height(DCConstants.WINDOW_HEIGHT / 3.0f - 85)))
             {
                 bool allDependenciesSatisfied = unityVersionSuccess && allShadersSuccess && sdkVersionSuccess;
                 using (new EditorGUI.DisabledGroupScope(!allDependenciesSatisfied))
@@ -303,7 +314,7 @@ namespace Cam.DependencyChecker
 
                         if (GUILayout.Button("Place Into Scene", GUILayout.Width(150)))
                         {
-                            GameObject instanced = InstantiatePrefabAndReturn(data.prefab);
+                            GameObject instanced = DCFunctions.InstantiatePrefabAndReturn(data.prefab);
                             EditorGUIUtility.PingObject(instanced);
                             Selection.activeGameObject = instanced;
                             SceneView.FrameLastActiveSceneView();
@@ -312,15 +323,6 @@ namespace Cam.DependencyChecker
                     }
                 }
             }
-        }
-
-        static GameObject InstantiatePrefabAndReturn(GameObject prefab)
-        {
-            GameObject instantiatedPrefab = GameObject.Instantiate(prefab);
-            instantiatedPrefab.name = prefab.name;
-            instantiatedPrefab.transform.position = Vector3.zero;
-            instantiatedPrefab.transform.rotation = Quaternion.identity;
-            return instantiatedPrefab;
         }
 
         void SaveAndOpenScene(SceneAsset scene)
@@ -344,7 +346,7 @@ namespace Cam.DependencyChecker
         void DrawHideOnLoad()
         {
             Rect labelRect = new Rect(5, DCConstants.WINDOW_HEIGHT - 45, DCConstants.WINDOW_WIDTH, 20);
-            Rect buttonRect = new Rect(5, DCConstants.WINDOW_HEIGHT - 45 + 20, 200, 20);
+            Rect buttonRect = new Rect(5, DCConstants.WINDOW_HEIGHT - 45 + 20, 225, 20);
 
             GUI.Label(labelRect, "Show this window on load?");
             if (EditorPrefs.HasKey(DCConstants.HIDE_ON_LOAD_STRING))
@@ -377,7 +379,11 @@ namespace Cam.DependencyChecker
 
         void ShowDependencies()
         {
-            float boxHeight = DCConstants.WINDOW_HEIGHT * 2.0f / 3.0f + 10;
+            float boxHeight = DCConstants.WINDOW_HEIGHT * 2.0f / 3.0f + 35;
+
+            if (data.prefab == null && data.scene == null)
+                boxHeight += 140;
+            
             bool allDependenciesSatisfied = unityVersionSuccess && allShadersSuccess && sdkVersionSuccess;
 
             //Rect currentViewRect = EditorGUILayout.GetControlRect(false);
@@ -387,12 +393,12 @@ namespace Cam.DependencyChecker
                 EditorGUILayout.BeginVertical("box");
                 if (allDependenciesSatisfied)
                 {
-                    string message = $"Everything looks good!!";
-                    EditorGUILayout.HelpBox(new GUIContent(message, DCConstants.CHECK_ICON, ""), true);
+                    string message = "All dependencies satisfied";
+                    EditorGUILayout.HelpBox(new GUIContent(message, DCConstants.CHECK_ICON), true);
                 }
                 else
                 {
-                    string message = $"Some dependencies have not been satisfied.";
+                    string message = "Some dependencies have not been satisfied";
                     EditorGUILayout.HelpBox(message, MessageType.Warning, true);
                 }
 
@@ -406,14 +412,14 @@ namespace Cam.DependencyChecker
                     #region Unity Version
                     if (Application.unityVersion.Equals(data.unityVersion))
                     {
-                        string message = $"The correct Unity Version '{data.unityVersion}' has been detected!";
+                        string message = $"Unity {data.unityVersion} detected";
                         EditorGUILayout.HelpBox(new GUIContent(message, DCConstants.CHECK_ICON, ""), true);
                     }
                     else
                     {
                         EditorGUILayout.HelpBox(
-                            $"The creator built this package on Unity Version '{data.unityVersion}'\n" +
-                            $"Your project is running on Unity Version '{Application.unityVersion}'.\n" +
+                            $"The creator built this package on Unity {data.unityVersion}\n" +
+                            $"Your project is running on Unity {Application.unityVersion}.\n" +
                             $"Some things my not function as intended",
                             MessageType.Error,
                             true
@@ -426,34 +432,41 @@ namespace Cam.DependencyChecker
                     if (vrcsdkVersion == null || vrcsdkVersion.Length < 1)
                     {
                         EditorGUILayout.BeginHorizontal();
-                        EditorGUILayout.HelpBox(
-                            $"The VRChat SDK 'VRCSDK3-AVATAR-{data.vrcsdkVersion}' was not detected in this project.\n\n" +
+                        GUIContent sdkMissing = new GUIContent(
+                            $"VRCSDK3-AVATAR-{data.vrcsdkVersion} not detected.\n\n" +
                             $"This package will be unable to be uploaded to VRChat until the VRChat SDK has been imported.\n\n" +
                             "Additionally, importing the VRChat SDK AFTER this package may cause issues with VRChat-associated scripts; " +
                             "if anything in this package is broken in game, this issue may be the cause.",
-                            MessageType.Error,
-                            true
+                            EditorGUIUtility.IconContent("console.erroricon").image
                         );
-                        if (GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(138)))
+
+                        EditorGUILayout.HelpBox(sdkMissing);
+
+                        float height = new GUIStyle("HelpBox").CalcHeight(sdkMissing, 335 + 60);
+                        if (GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(height)))
                             Application.OpenURL(DCConstants.SDK_DOWNLOAD_URL);
                         EditorGUILayout.EndHorizontal();
                     }
                     else if (sdkVersionSuccess)
                     {
-                        string message = $"The correct VRCSDK Version '{data.vrcsdkVersion}' has been detected!";
+                        string message = $"VRCSDK3-AVATAR-{data.vrcsdkVersion} detected";
                         EditorGUILayout.HelpBox(new GUIContent(message, DCConstants.CHECK_ICON, ""), true);
                     }
                     else
                     {
                         EditorGUILayout.BeginHorizontal();
-                        EditorGUILayout.HelpBox(
-                            $"The creator built this package using VRCSDK Version '{data.vrcsdkVersion}'\n" +
-                            $"Your project is running on VRCSDK Version '{vrcsdkVersion}'.\n" +
+
+                        GUIContent sdkMismatch = new GUIContent(
+                            $"VRCSDK3-AVATAR-{data.vrcsdkVersion} not detected.\n" +
+                            $"Your project is running on VRCSDK3-AVATAR-{vrcsdkVersion}.\n" +
                             $"Some things my not function as intended",
-                            MessageType.Error,
-                            true
+                            EditorGUIUtility.IconContent("console.warnicon").image
                         );
-                        if (GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(66)))
+
+                        EditorGUILayout.HelpBox(sdkMismatch);
+
+                        float height = new GUIStyle("HelpBox").CalcHeight(sdkMismatch, 335 + 60);
+                        if (GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(height)))
                             Application.OpenURL(DCConstants.SDK_DOWNLOAD_URL);
                         EditorGUILayout.EndHorizontal();
                     }
@@ -470,12 +483,6 @@ namespace Cam.DependencyChecker
                     EditorGUILayout.EndVertical();
                 }
             }
-
-            if (allDependenciesSatisfied)
-            {
-                GUI.DrawTexture(new Rect(280, 225, 256, 256), DCConstants.CHECK_ICON_HP);
-                GUI.DrawTexture(new Rect(500, 430, 64, 64), DCConstants.PEEPO_HYPERS_ICON);
-            }
         }
 
         void DrawShaderDependency(DCShaderDependency sd)
@@ -487,17 +494,17 @@ namespace Cam.DependencyChecker
                 case DCShaderDependency.ImportStatus.PRESENT:
                     string message = string.Empty;
                     if (sd.version != null && sd.version.Length > 0)
-                        message = $"'{sd.shaderFriendlyName}' v{sd.version} has been detected!";
+                        message = $"{sd.shaderFriendlyName} v{sd.version} detected";
                     else if (sd.version != null)
-                        message = $"'{sd.shaderFriendlyName}' has been detected!";
+                        message = $"{sd.shaderFriendlyName} detected";
 
                     messageContent.text = message;
                     messageContent.image = DCConstants.CHECK_ICON;
                     break;
                 case DCShaderDependency.ImportStatus.INVALID_VERSION:
                     allShadersSuccess = false;
-                    string versionMessage = $"You have an invalid version of '{sd.shaderFriendlyName}' installed.\n" +
-                        $"This project requires '{sd.shaderFriendlyName}' version '{sd.version}'";
+                    string versionMessage = $"Invalid version of {sd.shaderFriendlyName} installed.\n" +
+                        $"This project requires {sd.shaderFriendlyName} version {sd.version}";
 
                     messageContent.text = versionMessage;
                     messageContent.image = EditorGUIUtility.IconContent("console.erroricon").image;
@@ -505,10 +512,10 @@ namespace Cam.DependencyChecker
                 case DCShaderDependency.ImportStatus.ABSENT:
                     allShadersSuccess = false;
                     string version = sd.version.Length > 0
-                        ? $"This project requires '{sd.shaderFriendlyName}' version '{sd.version}'"
-                        : $"This project requires '{sd.shaderFriendlyName}'";
+                        ? $"{sd.shaderFriendlyName} version {sd.version} not detected"
+                        : $"{sd.shaderFriendlyName} not detected";
 
-                    messageContent.text = $"You do not have '{sd.shaderFriendlyName}' installed.\n{version}";
+                    messageContent.text = $"{sd.shaderFriendlyName} not detected\n{version}";
                     messageContent.image = EditorGUIUtility.IconContent("console.erroricon").image;
                     break;
             }
@@ -516,9 +523,8 @@ namespace Cam.DependencyChecker
             using (new EditorGUILayout.HorizontalScope())
             {
                 EditorGUILayout.HelpBox(messageContent);
-                if(sd.importStatus != DCShaderDependency.ImportStatus.PRESENT)
-                {
-                    float boxHeight = new GUIStyle("HelpBox").CalcHeight(messageContent, 335);// rect.width);
+                if(sd.importStatus != DCShaderDependency.ImportStatus.PRESENT) {
+                    float boxHeight = new GUIStyle("HelpBox").CalcHeight(messageContent, 335 + 60);// rect.width);
                     if (sd.link.Length > 0 && GUILayout.Button("Fix", GUILayout.Width(35), GUILayout.Height(boxHeight)))
                         Application.OpenURL(sd.link);
                 }
