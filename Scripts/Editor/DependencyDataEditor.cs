@@ -1,10 +1,6 @@
-﻿using System.Collections;
-using System.Linq;
-using System.Collections.Generic;
+﻿#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
-using static Cam.DependencyChecker.DCConstants;
-using UnityEngine.UIElements;
 
 namespace Cam.DependencyChecker
 {
@@ -191,12 +187,12 @@ namespace Cam.DependencyChecker
                                 shaderFriendlyName.stringValue = EditorGUILayout.DelayedTextField(
                                     "Shader Friendly Name", shaderFriendlyName.stringValue);
 
-                                EditorGUILayout.BeginHorizontal(); 
-                                link.stringValue = EditorGUILayout.DelayedTextField(
-                                    "link", link.stringValue);
-                                if (GUILayout.Button("Test", GUILayout.Width(50)))
-                                    Application.OpenURL(link.stringValue);
-                                EditorGUILayout.EndHorizontal();
+                                using (new EditorGUILayout.HorizontalScope()) {
+                                    link.stringValue = EditorGUILayout.DelayedTextField(
+                                        "link", link.stringValue);
+                                    if (GUILayout.Button("Test", GUILayout.Width(50)))
+                                        Application.OpenURL(link.stringValue);
+                                }
 
                                 version.stringValue = EditorGUILayout.DelayedTextField(
                                     "version", version.stringValue);
@@ -343,8 +339,8 @@ namespace Cam.DependencyChecker
                 {
                     EditorGUILayout.HelpBox(
                         $"You do not have a thumbnail image.\n\n" +
-                        $"This won't break anything, but it's always nice to add your own flair to the welocme screen <3\n\n" +
-                        $"Make sure the image is\n{THUMBNAIL_SIZE}px x {THUMBNAIL_SIZE}px square",
+                        $"This won't break anything, but it's always nice to add your own flair to the welcome screen <3\n\n" +
+                        $"Make sure the image is square.",
                         MessageType.Warning
                     );
                 }
@@ -505,3 +501,4 @@ namespace Cam.DependencyChecker
         }
     }
 }
+#endif

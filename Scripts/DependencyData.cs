@@ -94,15 +94,24 @@ namespace Cam.DependencyChecker
         {
             this.unityVersion = Application.unityVersion;
 
-            // get VRCSDK version by Reflection
-            System.Type vrc = System.Type.GetType(@"VRC.Core.SDKClientUtilities");
-            if (vrc != null) {
-                System.Reflection.MethodInfo getDate = vrc.GetMethod("GetSDKVersionDate");
-                if (getDate != null)
-                {
-                    this.vrcsdkVersion = getDate.Invoke(null, null).ToString();
-                }
+#if VRC_SDK_VRCSDK3
+            this.vrcsdkVersion = VRC.Core.SDKClientUtilities.GetSDKVersionDate();
+#endif
+            /* get VRCSDK version by Reflection
+            System.Type vrc = System.Type.GetType("VRC.Core.SDKClientUtilities");
+            if (vrc == null)
+            {
+                Debug.Log("Failed to retrieve VRC class");
+                return;
             }
+
+            System.Reflection.MethodInfo getDate = vrc.GetMethod("GetSDKVersionDate");
+            if (getDate == null)
+            {
+                Debug.Log("Failed to retrieve date function");
+                return;
+            }
+              */  
         }
     }
 }

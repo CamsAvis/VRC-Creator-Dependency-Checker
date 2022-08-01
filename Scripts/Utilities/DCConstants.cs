@@ -95,10 +95,13 @@ namespace Cam.DependencyChecker
         #region Shader Constants
         public const string POI_VERSION_REGEX = "\\d{1,3}.\\d{1,3}.\\d{1,3}";
         public const string POI_SHADER_VERSION_PROPERTY = "shader_master_label";
-        public static readonly List<string> SHADER_BLACKLIST_KEYWORDS = new List<string>() {
-            "Locked"
+        public static readonly List<string> SHADER_BLACKLIST_STARTSWITH = new List<string>()
+        {
+            "Mobile/", "Nature/", "UI/", "VR/", "AR/", "FX/", "GUI/", "Particles/", "Skybox/", "Sprites/",
+            "Unlit/", "Video/", "Autodesk Interactive", "Standard/", "Legacy Shaders/", "Hidden/Locked/"
         };
-        public static readonly List<string> DEFAULT_SHADER_NAMES = new List<string>() {
+        public static readonly List<string> DEFAULT_SHADER_NAMES = new List<string>() 
+        {
             "Hidden/TerrainEngine/Splatmap/Diffuse-AddPass",
             "Hidden/TerrainEngine/BillboardTree",
             "Hidden/VR/BlitFromTex2DToTexArraySlice",

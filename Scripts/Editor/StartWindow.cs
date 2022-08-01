@@ -2,7 +2,6 @@
 
 using System;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Collections.Generic;
 
 using UnityEditor;
@@ -75,8 +74,6 @@ namespace Cam.DependencyChecker
         public const string SDK_VERSION = "2022.06.03.00.04";
 
         static GUIStyle discordTagStyle;
-        static GUIStyle helpboxIconStyle;
-        static GUIStyle wordWrapStyle;
         Vector2 scrollPos;
 
         DependencyData data;
@@ -240,23 +237,6 @@ namespace Cam.DependencyChecker
                 richText = true,
                 font = DCConstants.FUTURA_FONT
             };
-
-            wordWrapStyle = new GUIStyle(GUI.skin.label)
-            {
-                wordWrap = true,
-                richText = true,
-                fontSize = 10,
-                alignment = TextAnchor.MiddleLeft,
-                imagePosition = ImagePosition.ImageLeft,
-                stretchWidth = true
-            };
-
-            helpboxIconStyle = new GUIStyle(GUI.skin.box)
-            {
-                fixedWidth = 32,
-                fixedHeight = 32,
-                alignment = TextAnchor.MiddleRight,
-            };
         }
 
         void DrawSocialLinks()
@@ -288,7 +268,7 @@ namespace Cam.DependencyChecker
 
         void ShowStarterAssets()
         {
-            GUILayout.Label(new GUIContent("Starter Assets"), UIUtility.discordTagStyle);
+            GUILayout.Label(new GUIContent("Starter Assets"), discordTagStyle);
 
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox,
                 GUILayout.Height(DCConstants.WINDOW_HEIGHT / 3.0f - 60)))
@@ -401,15 +381,13 @@ namespace Cam.DependencyChecker
             bool allDependenciesSatisfied = unityVersionSuccess && allShadersSuccess && sdkVersionSuccess;
 
             //Rect currentViewRect = EditorGUILayout.GetControlRect(false);
-            GUILayout.Label("Dependencies", UIUtility.discordTagStyle);
+            GUILayout.Label("Dependencies", discordTagStyle);
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Height(boxHeight)))
             {
                 EditorGUILayout.BeginVertical("box");
                 scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
                 using (new EditorGUI.DisabledGroupScope(allDependenciesSatisfied))
                 {
-
-
                     if (allDependenciesSatisfied)
                     {
                         string message = $"Everything looks good!!";

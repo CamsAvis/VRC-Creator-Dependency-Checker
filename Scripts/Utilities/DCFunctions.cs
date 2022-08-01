@@ -80,11 +80,11 @@ namespace Cam.DependencyChecker
 
         public static bool ShaderInBlacklist(string shaderName)
         {
-            foreach (string blacklistedShaderKeyword in DCConstants.SHADER_BLACKLIST_KEYWORDS)
-            {
-                if (shaderName.Contains(blacklistedShaderKeyword))
+            foreach (string name in DCConstants.SHADER_BLACKLIST_STARTSWITH) {
+                if (shaderName.StartsWith(name))
                     return true;
             }
+
             return false;
         }
 
