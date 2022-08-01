@@ -90,7 +90,7 @@ namespace Cam.DependencyChecker
 
                 if(EditorGUI.EndChangeCheck()) {
                     serializedObject.ApplyModifiedProperties();
-                    StartWindow[] windows = Resources.FindObjectsOfTypeAll<StartWindow>();
+                    DCStartWindow[] windows = Resources.FindObjectsOfTypeAll<DCStartWindow>();
                     for (int i = 0; i < windows.Length; i++) {
                         windows[i].UpdateWindow();
                         windows[i].Repaint();

@@ -20,8 +20,8 @@ namespace Cam.DependencyChecker
 
         static void UpdateWindow(string packageName)
         {
-            if(EditorWindow.HasOpenInstances<StartWindow>()) {
-                StartWindow[] windows = Resources.FindObjectsOfTypeAll<StartWindow>();
+            if(EditorWindow.HasOpenInstances<DCStartWindow>()) {
+                DCStartWindow[] windows = Resources.FindObjectsOfTypeAll<DCStartWindow>();
                 for (int i = 0; i < windows.Length; i++) {
                     windows[i].UpdateWindow();
                     windows[i].Repaint();

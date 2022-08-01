@@ -84,7 +84,10 @@ namespace Cam.DependencyChecker
                     }
 
                     ShaderDependency dep = new ShaderDependency(shader);
-                    if (!shaderDependencies.Contains(dep))
+                    bool validShader = shader != null
+                        && !DCFunctions.ShaderInBlacklist(shader.name)
+                        && !DCConstants.DEFAULT_SHADER_NAMES.Contains(shader.name);
+                    if (validShader && !shaderDependencies.Contains(dep))
                         shaderDependencies.Add(dep);
                 }
             }

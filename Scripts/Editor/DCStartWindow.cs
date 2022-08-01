@@ -37,7 +37,7 @@ namespace Cam.DependencyChecker
                 SessionState.SetBool(hasOpened, true);
                 if (EditorPrefs.GetBool(hideOnLoad) == false)
                 {
-                    StartWindow.Init();
+                    DCStartWindow.Init();
                 }
             }
         }
@@ -63,7 +63,7 @@ namespace Cam.DependencyChecker
         }
     }
 
-    public class StartWindow : EditorWindow
+    public class DCStartWindow : EditorWindow
     {
         string vrcsdkVersion;
         bool unityVersionSuccess;
@@ -84,7 +84,7 @@ namespace Cam.DependencyChecker
         [MenuItem("Cam/Start", false, 1999)]
         public static void Init()
         {
-            StartWindow window = (StartWindow)GetWindow(typeof(StartWindow), true, "Avatars Start Screen");
+            DCStartWindow window = (DCStartWindow)GetWindow(typeof(DCStartWindow), true, "Avatars Start Screen");
             window.minSize = new Vector2(DCConstants.WINDOW_WIDTH, DCConstants.WINDOW_HEIGHT);
             window.maxSize = new Vector2(DCConstants.WINDOW_WIDTH, DCConstants.WINDOW_HEIGHT);
             window.Show();
