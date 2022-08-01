@@ -235,7 +235,11 @@ namespace Cam.DependencyChecker
             bool allDependenciesSatisfied = unityVersionSuccess && allShadersSuccess && sdkVersionSuccess;
             if (allDependenciesSatisfied)
             {
-                GUI.DrawTexture(new Rect(280+50, 225 + 60, 256, 256), DCConstants.CHECK_ICON_HP);
+                Rect checkRect = new Rect(330,285,256,256);
+                if (data.prefab == null && data.scene == null)
+                    checkRect.y -= 70;
+
+                GUI.DrawTexture(checkRect, DCConstants.CHECK_ICON_HP);
                 GUI.DrawTexture(new Rect(500 + 100, 430 + 100, 64, 64), DCConstants.PEEPO_HYPERS_ICON);
             }
         }
