@@ -94,8 +94,6 @@ namespace Cam.DependencyChecker
         {
             GameObject instantiatedPrefab = GameObject.Instantiate(prefab);
             instantiatedPrefab.name = prefab.name;
-            instantiatedPrefab.transform.position = Vector3.zero;
-            instantiatedPrefab.transform.rotation = Quaternion.identity;
             return instantiatedPrefab;
         }
     }
