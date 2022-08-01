@@ -385,21 +385,22 @@ namespace Cam.DependencyChecker
             using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox, GUILayout.Height(boxHeight)))
             {
                 EditorGUILayout.BeginVertical("box");
+                if (allDependenciesSatisfied)
+                {
+                    string message = $"Everything looks good!!";
+                    EditorGUILayout.HelpBox(new GUIContent(message, DCConstants.CHECK_ICON, ""), true);
+                }
+                else
+                {
+                    string message = $"Some dependencies have not been satisfied.";
+                    EditorGUILayout.HelpBox(message, MessageType.Warning, true);
+                }
+
+                GUILine(!allDependenciesSatisfied);
+
                 scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
                 using (new EditorGUI.DisabledGroupScope(allDependenciesSatisfied))
                 {
-                    if (allDependenciesSatisfied)
-                    {
-                        string message = $"Everything looks good!!";
-                        EditorGUILayout.HelpBox(new GUIContent(message, DCConstants.CHECK_ICON, ""), true);
-                    }
-                    else
-                    {
-                        string message = $"Some dependencies have not been satisfied.";
-                        EditorGUILayout.HelpBox(message, MessageType.Warning, true);
-                    }
-
-                    GUILine(!allDependenciesSatisfied);
 
                     // UNITY VERSION
                     #region Unity Version
@@ -472,66 +473,65 @@ namespace Cam.DependencyChecker
 
             if (allDependenciesSatisfied)
             {
-                GUI.DrawTexture(new Rect(265, 200, 256, 256), DCConstants.CHECK_ICON_HP);
+                GUI.DrawTexture(new Rect(280, 225, 256, 256), DCConstants.CHECK_ICON_HP);
                 GUI.DrawTexture(new Rect(500, 430, 64, 64), DCConstants.PEEPO_HYPERS_ICON);
             }
         }
 
         void DrawShaderDependency(DCShaderDependency sd)
         {
-            EditorGUILayout.BeginHorizontal();
+            GUIContent messageContent = new GUIContent(string.Empty);
+            
             switch (sd.importStatus)
             {
                 case DCShaderDependency.ImportStatus.PRESENT:
                     string message = string.Empty;
                     if (sd.version != null && sd.version.Length > 0)
-                    {
                         message = $"'{sd.shaderFriendlyName}' v{sd.version} has been detected!";
-                    }
                     else if (sd.version != null)
-                    {
                         message = $"'{sd.shaderFriendlyName}' has been detected!";
-                    }
-                    EditorGUILayout.HelpBox(new GUIContent(message, DCConstants.CHECK_ICON, ""), true);
+
+                    messageContent.text = message;
+                    messageContent.image = DCConstants.CHECK_ICON;
                     break;
                 case DCShaderDependency.ImportStatus.INVALID_VERSION:
                     allShadersSuccess = false;
-                    EditorGUILayout.HelpBox(
-                        $"You have an invalid version of '{sd.shaderFriendlyName}' installed.\n" +
-                        $"This project requires '{sd.shaderFriendlyName}' version '{sd.version}'",
-                        MessageType.Error,
-                        true
-                    );
-                    if (sd.link.Length > 0 && GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(38)))
-                        Application.OpenURL(sd.link);
+                    string versionMessage = $"You have an invalid version of '{sd.shaderFriendlyName}' installed.\n" +
+                        $"This project requires '{sd.shaderFriendlyName}' version '{sd.version}'";
 
-                    allShadersSuccess = false;
+                    messageContent.text = versionMessage;
+                    messageContent.image = EditorGUIUtility.IconContent("console.erroricon").image;
                     break;
                 case DCShaderDependency.ImportStatus.ABSENT:
                     allShadersSuccess = false;
                     string version = sd.version.Length > 0
                         ? $"This project requires '{sd.shaderFriendlyName}' version '{sd.version}'"
                         : $"This project requires '{sd.shaderFriendlyName}'";
-                    EditorGUILayout.HelpBox(
-                        $"You do not have '{sd.shaderFriendlyName}' installed.\n{version}",
-                        MessageType.Error,
-                        true
-                    );
-                    if (sd.link.Length > 0 && GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(38)))
-                        Application.OpenURL(sd.link);
 
-                    allShadersSuccess = false;
+                    messageContent.text = $"You do not have '{sd.shaderFriendlyName}' installed.\n{version}";
+                    messageContent.image = EditorGUIUtility.IconContent("console.erroricon").image;
                     break;
             }
-            EditorGUILayout.EndHorizontal();
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.HelpBox(messageContent);
+                if(sd.importStatus != DCShaderDependency.ImportStatus.PRESENT)
+                {
+                    float boxHeight = new GUIStyle("HelpBox").CalcHeight(messageContent, 335);// rect.width);
+                    if (sd.link.Length > 0 && GUILayout.Button("Fix", GUILayout.Width(35), GUILayout.Height(boxHeight)))
+                        Application.OpenURL(sd.link);
+                }
+            }
         }
 
         static void GUILine(bool enabled, int i_height = 1)
         {
+            GUILayout.Space(10);
             Rect rect = EditorGUILayout.GetControlRect(false, i_height);
             if (rect != null)
             {
-                rect.width = EditorGUIUtility.currentViewWidth;
+                //rect.width = EditorGUIUtility.currentViewWidth - 50;
                 GUI.DrawTexture(rect, EditorGUIUtility.whiteTexture);
             }
             GUILayout.Space(10);

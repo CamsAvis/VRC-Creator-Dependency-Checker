@@ -97,9 +97,17 @@ namespace Cam.DependencyChecker
         {
             this.unityVersion = Application.unityVersion;
 
-#if VRC_SDK_VRCSDK3
-            this.vrcsdkVersion = VRC.Core.SDKClientUtilities.GetSDKVersionDate();
-#endif
+            //#if VRC_SDK_VRCSDK3
+            //            this.vrcsdkVersion = VRC.Core.SDKClientUtilities.GetSDKVersionDate();
+            //#endif
+            System.Type vrc = System.Type.GetType(@"VRC.SDK3.Avatars.Components.VRCAvatarDescriptor");
+            if(vrc == null) {
+                Debug.Log("Failed to find VRC class");
+            } else
+            {
+                Debug.Log("Found VRC class!");
+            }
+
             /* get VRCSDK version by Reflection
             System.Type vrc = System.Type.GetType("VRC.Core.SDKClientUtilities");
             if (vrc == null)

@@ -375,7 +375,7 @@ namespace Cam.DependencyChecker
                 );
 
                 if(EditorGUI.EndChangeCheck()) {
-                    Undo.RecordObject(thumbnail.objectReferenceValue, "Change Thumbnail Image");
+                    Undo.RecordObject(target, "Change Thumbnail Image");
                     thumbnail.objectReferenceValue = iconImage;
                 }
             }
